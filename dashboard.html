@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Admin</title>
+
+<style>
+:root{
+  --primary:#2196f3;
+  --primary-dark:#1976d2;
+  --secondary:#64b5f6;
+  --warning:#fbc02d;
+  --danger:#e53935;
+  --bg:#f5f7fb;
+}
+
+body{
+  font-family:Arial;
+  background:var(--bg);
+  margin:0;
+}
+
+/* ✅ HEADER */
+.header{
+  background:var(--primary);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 16px;
+}
+
+.header-left{
+  display:flex;
+  align-items:center;
+}
+
+.header img{
+  height:40px;
+  margin-right:12px;
+}
+
+.header span{
+  font-size:20px;
+  font-weight:bold;
+}
+
+/* ✅ LOGOUT ROSSO */
+.logout-btn{
+  background:var(--danger);
+  border:none;
+  color:white;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+}
+.logout-btn:hover{
+  background:#c62828;
+}
+
+/* ✅ TAB BAR */
+.tabs{
+  display:flex;
+  background:white;
+  border-bottom:1px solid #ddd;
+}
+.tab{
+  flex:1;
+  text-align:center;
+  padding:12px;
+  cursor:pointer;
+  font-weight:bold;
+  color:#555;
+}
+.tab.active{
+  color:var(--primary);
+  border-bottom:3px solid var(--primary);
+}
+
+/* LAYOUT */
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:white;
+  border-radius:15px;
+  padding:15px;
+  box-shadow:0 4px 10px rgba(0,0,0,.08);
+}
+
+.card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.item{
+  border-bottom:1px solid #eee;
+  padding:8px 0;
+}
+
+/* BOTTONI */
+button{
+  padding:6px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+}
+
+.primary-btn{
+  background:var(--primary);
+  color:white;
+}
+.primary-btn:hover{ background:var(--primary-dark); }
+
+.edit-btn{
+  background:var(--warning);
+}
+.edit-btn:hover{ background:#f9a825; }
+
+.delete-btn{
+  background:var(--danger);
+  color:white;
+}
+.delete-btn:hover{ background:#c62828; }
+</style>
+</head>
+
+<body style="display:none">
+
+<!-- ✅ HEADER -->
+<div class="header">
+  <div class="header-left">
+    <img src="logo.png" alt="Logo">
+    <span>GVP</span>
+  </div>
+
+  <button id="logoutBtn" class="logout-btn">Logout</button>
+</div>
+
+<!-- ✅ TAB NAV -->
+<div class="tabs">
+  <div class="tab" onclick="location='prenotazione.html'">Prenotazioni</div>
+  <div class="tab" onclick="location='agenda.html'">Agenda</div>
+  <div class="tab active">Dashboard</div>
+</div>
+
+<div class="container">
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Prenotazioni (mese corrente)</h3>
+        <button id="btnNuovaPren" class="primary-btn">➕ Nuova</button>
+      </div>
+      <div id="listaPrenotazioni"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Pazienti</h3>
+        <button id="btnNuovoPaz" class="primary-btn">➕ Nuovo</button>
+      </div>
+      <div id="listaPazienti"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Ospedali</h3>
+        <button id="btnNuovoOsp" class="primary-btn">➕ Nuovo</button>
+      </div>
+      <div id="listaOspedali"></div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, collection, getDocs,
+  deleteDoc, updateDoc, doc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyDZUTVFhbATsDmBP0VOr7fmfPByQGqwSIE",
+  authDomain:"prenotazioni-cas.firebaseapp.com",
+  projectId:"prenotazioni-cas"
+});
+const auth = getAuth(app);
+const db = getFirestore(app);
+const adminEmail = "admin@admin.com";
+
+/* AUTH */
+onAuthStateChanged(auth, user=>{
+  if(!user || user.email!==adminEmail){
+    location="index.html";
+    return;
+  }
+  document.body.style.display="block";
+  caricaPrenotazioni();
+  caricaPazienti();
+  caricaOspedali();
+});
+
+/* LOGOUT */
+logoutBtn.onclick=()=>auth.signOut().then(()=>location="index.html");
+
+/* NAV */
+btnNuovaPren.onclick=()=>location="prenotazione.html";
+btnNuovoPaz.onclick=()=>location="aggiungiPaziente.html";
+btnNuovoOsp.onclick=()=>location="aggiungiOspedale.html";
+
+/* PRENOTAZIONI */
+async function caricaPrenotazioni(){
+  listaPrenotazioni.innerHTML="";
+  const snap = await getDocs(collection(db,"prenotazioni"));
+  snap.forEach(d=>{
+    const p=d.data();
+    const row=document.createElement("div");
+    row.className="item";
+    row.innerHTML=`${p.nome} – ${p.ospedale} – ${p.data}
+      <button class="delete-btn">X</button>`;
+    row.querySelector("button").onclick=async()=>{
+      if(confirm("Eliminare prenotazione?")){
+        await deleteDoc(doc(db,"prenotazioni",d.id));
+        caricaPrenotazioni();
+      }
+    };
+    listaPrenotazioni.appendChild(row);
+  });
+}
+
+/* PAZIENTI */
+async function caricaPazienti(){
+  listaPazienti.innerHTML="";
+  const snap=await getDocs(collection(db,"pazienti"));
+  snap.forEach(d=>{
+    const row=document.createElement("div");
+    row.className="item";
+    row.innerHTML=`${d.data().nome}
+      <button class="edit-btn">✏</button>
+      <button class="delete-btn">X</button>`;
+    row.querySelector(".edit-btn").onclick=async()=>{
+      const nuovo=prompt("Nuovo nome",d.data().nome);
+      if(nuovo){
+        await updateDoc(doc(db,"pazienti",d.id),{nome:nuovo});
+        caricaPazienti();
+      }
+    };
+    row.querySelector(".delete-btn").onclick=async()=>{
+      if(confirm("Eliminare paziente?")){
+        await deleteDoc(doc(db,"pazienti",d.id));
+        caricaPazienti();
+      }
+    };
+    listaPazienti.appendChild(row);
+  });
+}
+
+/* OSPEDALI */
+async function caricaOspedali(){
+  listaOspedali.innerHTML="";
+  const snap=await getDocs(collection(db,"ospedali"));
+  snap.forEach(d=>{
+    const row=document.createElement("div");
+    row.className="item";
+    row.innerHTML=`${d.data().nome}
+      <button class="edit-btn">✏</button>
+      <button class="delete-btn">X</button>`;
+    row.querySelector(".edit-btn").onclick=async()=>{
+      const nuovo=prompt("Nuovo nome",d.data().nome);
+      if(nuovo){
+        await updateDoc(doc(db,"ospedali",d.id),{nome:nuovo});
+        caricaOspedali();
+      }
+    };
+    row.querySelector(".delete-btn").onclick=async()=>{
+      if(confirm("Eliminare ospedale?")){
+        await deleteDoc(doc(db,"ospedali",d.id));
+        caricaOspedali();
+      }
+    };
+    listaOspedali.appendChild(row);
+  });
+}
+</script>
+
+</body>
+</html>

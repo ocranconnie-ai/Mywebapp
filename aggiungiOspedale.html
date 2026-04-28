@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestione Ospedali</title>
+
+<style>
+body{
+  font-family: Arial;
+  background:#f5f7fb;
+  margin:0;
+}
+
+.header{
+  background:#16a085;
+  color:white;
+  padding:15px;
+  text-align:center;
+  font-size:20px;
+}
+
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:20px;
+}
+
+.card{
+  background:white;
+  border-radius:15px;
+  padding:20px;
+  margin-bottom:20px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+#salvaBtn{
+  background:#4CAF50;
+  color:white;
+}
+
+#indietroBtn{
+  background:#e74c3c;
+  color:white;
+}
+
+.edit-btn{
+  background:#f39c12;
+  color:white;
+  margin-top:5px;
+}
+
+.delete-btn{
+  background:#e74c3c;
+  color:white;
+  margin-top:5px;
+}
+
+.item{
+  border-bottom:1px solid #eee;
+  padding:10px 0;
+}
+</style>
+</head>
+
+<body style="display:none;">
+
+<div class="header">Gestione Ospedali</div>
+
+<div class="container">
+
+  <!-- ➕ AGGIUNGI -->
+  <div class="card">
+    <h3>Aggiungi ospedale</h3>
+
+    <input type="text" id="nome" placeholder="Nome ospedale">
+    <input type="text" id="indirizzo" placeholder="Indirizzo">
+
+    <button id="salvaBtn">Salva</button>
+  </div>
+
+  <!-- 📋 LISTA -->
+  <div class="card">
+    <h3>Ospedali esistenti</h3>
+    <div id="listaOspedali"></div>
+  </div>
+
+  <!-- 🔙 -->
+  <button id="indietroBtn">Torna indietro</button>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyDZUTVFhbATsDmBP0VOr7fmfPByQGqwSIE",
+  authDomain: "prenotazioni-cas.firebaseapp.com",
+  projectId: "prenotazioni-cas",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const adminEmail = "admin@admin.com";
+
+// 🔐 CONTROLLO ACCESSO
+onAuthStateChanged(auth, (user)=>{
+
+  if(!user){
+    window.location = "index.html";
+    return;
+  }
+
+  if(user.email !== adminEmail){
+    alert("Non autorizzato");
+    window.location = "prenotazione.html";
+    return;
+  }
+
+  document.body.style.display = "block";
+
+  caricaOspedali();
+});
+
+// ➕ AGGIUNGI OSPEDALE
+document.getElementById("salvaBtn").onclick = async ()=>{
+
+  const nome = document.getElementById("nome").value.trim();
+  const indirizzo = document.getElementById("indirizzo").value.trim();
+
+  if(!nome || !indirizzo){
+    alert("Compila tutti i campi");
+    return;
+  }
+
+  await addDoc(collection(db,"ospedali"),{
+    nome,
+    indirizzo
+  });
+
+  alert("Ospedale aggiunto!");
+
+  document.getElementById("nome").value = "";
+  document.getElementById("indirizzo").value = "";
+
+  caricaOspedali();
+};
+
+// 📋 CARICA LISTA
+async function caricaOspedali(){
+
+  const snapshot = await getDocs(collection(db,"ospedali"));
+  const lista = document.getElementById("listaOspedali");
+
+  lista.innerHTML = "";
+
+  snapshot.forEach(docSnap=>{
+
+    const d = docSnap.data();
+
+    const div = document.createElement("div");
+    div.className = "item";
+
+    div.innerHTML = `
+      <strong>${d.nome}</strong><br>
+      ${d.indirizzo}<br>
+
+      <button class="edit-btn" onclick="modifica('${docSnap.id}','${d.nome}','${d.indirizzo}')">
+        Modifica
+      </button>
+
+      <button class="delete-btn" onclick="elimina('${docSnap.id}')">
+        Elimina
+      </button>
+    `;
+
+    lista.appendChild(div);
+  });
+}
+
+// ✏️ MODIFICA
+window.modifica = async function(id,nome,indirizzo){
+
+  const nuovoNome = prompt("Nuovo nome", nome);
+  const nuovoIndirizzo = prompt("Nuovo indirizzo", indirizzo);
+
+  if(!nuovoNome || !nuovoIndirizzo) return;
+
+  await updateDoc(doc(db,"ospedali",id),{
+    nome: nuovoNome,
+    indirizzo: nuovoIndirizzo
+  });
+
+  alert("Modificato!");
+
+  caricaOspedali();
+};
+
+// ❌ ELIMINA
+window.elimina = async function(id){
+
+  if(!confirm("Eliminare ospedale?")) return;
+
+  await deleteDoc(doc(db,"ospedali",id));
+
+  alert("Eliminato!");
+
+  caricaOspedali();
+};
+
+// 🔙 TORNA
+document.getElementById("indietroBtn").onclick = ()=>{
+  window.location = "prenotazione.html";
+};
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,31 @@
+
+Cloud Storage for Firebase API
+Firebase AI Logic API
+Firebase App Check API
+Firebase App Testers API
+Firebase Data Connect API
+Firebase In-App Messaging API
+Firebase ML API
+Firebase Phone Number Verification API
+ML Kit API
+
+-Firebase App Hosting API
+-FCM Registration API
+-Firebase App Distribution API
+-Firebase Hosting API
+-Firebase Installations API
+-Firebase Management API
+-Token Service API
+-Identity Toolkit API
+-Firebase Realtime Database Management API
+-Firebase Remote Config API
+-Firebase Remote Config Realtime API
+-Firebase Rules API
+
+-Cloud Datastore API
+-Cloud Firestore API
+-Cloud Logging API
+-Cloud SQL Admin API
+
+admin@admin.com
+123456

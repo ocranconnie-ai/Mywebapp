@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda</title>
+
+<style>
+:root{
+  --primary:#2196f3;
+  --primary-dark:#1976d2;
+  --secondary:#64b5f6;
+  --danger:#e53935;
+  --bg:#f5f7fb;
+}
+
+body{
+  font-family: Arial, sans-serif;
+  background:var(--bg);
+  margin:0;
+}
+
+/* ✅ HEADER */
+.header{
+  background:var(--primary);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 16px;
+}
+
+.header-left{
+  display:flex;
+  align-items:center;
+}
+
+.header img{
+  height:40px;
+  margin-right:12px;
+}
+
+.header span{
+  font-size:20px;
+  font-weight:bold;
+}
+
+/* ✅ LOGOUT ROSSO */
+.logout-btn{
+  background:var(--danger);
+  border:none;
+  color:white;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+}
+.logout-btn:hover{
+  background:#c62828;
+}
+
+/* ✅ TAB NAV */
+.tabs{
+  display:flex;
+  background:white;
+  border-bottom:1px solid #ddd;
+}
+.tab{
+  flex:1;
+  text-align:center;
+  padding:12px;
+  cursor:pointer;
+  font-weight:bold;
+  color:#555;
+}
+.tab.active{
+  color:var(--primary);
+  border-bottom:3px solid var(--primary);
+}
+
+/* ✅ CALENDAR */
+.calendar{
+  max-width:900px;
+  margin:20px auto;
+  background:white;
+  border-radius:15px;
+  padding:15px;
+  box-shadow:0 4px 10px rgba(0,0,0,.08);
+}
+
+h2{
+  text-align:center;
+  margin-top:0;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:6px;
+}
+
+.day-name{
+  font-weight:bold;
+  text-align:center;
+  padding:6px 0;
+}
+
+.day{
+  min-height:100px;
+  border:1px solid #ddd;
+  border-radius:8px;
+  padding:6px;
+  font-size:13px;
+}
+
+.day-number{
+  font-weight:bold;
+  margin-bottom:5px;
+}
+
+.event{
+  background:var(--secondary);
+  color:white;
+  padding:3px 5px;
+  border-radius:4px;
+  font-size:12px;
+  margin-bottom:3px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ✅ HEADER -->
+<div class="header">
+  <div class="header-left">
+    <img src="logo.png" alt="Logo">
+    <span>GVP</span>
+  </div>
+  <button id="logoutBtn" class="logout-btn">Logout</button>
+</div>
+
+<!-- ✅ TAB NAV -->
+<div class="tabs">
+  <div class="tab" onclick="location='prenotazione.html'">Prenotazioni</div>
+  <div class="tab active">Agenda</div>
+  <div class="tab" onclick="location='dashboard.html'">Dashboard</div>
+</div>
+
+<div class="calendar">
+  <h2>Agenda – Mese corrente</h2>
+  <div class="grid" id="calendarGrid"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, getDocs }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* FIREBASE */
+const app = initializeApp({
+  apiKey:"AIzaSyDZUTVFhbATsDmBP0VOr7fmfPByQGqwSIE",
+  authDomain:"prenotazioni-cas.firebaseapp.com",
+  projectId:"prenotazioni-cas"
+});
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* LOGOUT */
+logoutBtn.onclick = () =>
+  auth.signOut().then(() => location="index.html");
+
+const grid = document.getElementById("calendarGrid");
+
+/* Giorni settimana */
+["Lun","Mar","Mer","Gio","Ven","Sab","Dom"].forEach(d=>{
+  const el=document.createElement("div");
+  el.className="day-name";
+  el.textContent=d;
+  grid.appendChild(el);
+});
+
+/* Mese corrente */
+const now=new Date();
+const year=now.getFullYear();
+const month=now.getMonth();
+const firstDay=new Date(year,month,1);
+const daysInMonth=new Date(year,month+1,0).getDate();
+let startDay=firstDay.getDay();
+startDay=startDay===0?6:startDay-1;
+
+/* Celle vuote iniziali */
+for(let i=0;i<startDay;i++){
+  grid.appendChild(document.createElement("div"));
+}
+
+/* Prenotazioni */
+const snap=await getDocs(collection(db,"prenotazioni"));
+const prenotazioni={};
+
+snap.forEach(d=>{
+  const p=d.data();
+  if(!prenotazioni[p.data]) prenotazioni[p.data]=[];
+  prenotazioni[p.data].push(`${p.nome} (${p.fasciaOraria})`);
+});
+
+/* Giorni del mese */
+for(let day=1;day<=daysInMonth;day++){
+  const dateStr=`${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+  const cell=document.createElement("div");
+  cell.className="day";
+  cell.innerHTML=`<div class="day-number">${day}</div>`;
+
+  if(prenotazioni[dateStr]){
+    prenotazioni[dateStr].forEach(ev=>{
+      const e=document.createElement("div");
+      e.className="event";
+      e.textContent="• "+ev;
+      cell.appendChild(e);
+    });
+  }
+  grid.appendChild(cell);
+}
+</script>
+
+</body>
+</html>

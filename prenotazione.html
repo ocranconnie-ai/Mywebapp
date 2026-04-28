@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prenotazioni</title>
+
+<!-- FLATPICKR CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<style>
+:root{
+  --primary:#2196f3;
+  --primary-dark:#1976d2;
+  --secondary:#64b5f6;
+  --danger:#e53935;
+  --bg:#f5f7fb;
+}
+
+body{
+  font-family:Arial;
+  background:var(--bg);
+  margin:0;
+}
+
+/* ✅ HEADER */
+.header{
+  background:var(--primary);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 16px;
+}
+
+.header-left{
+  display:flex;
+  align-items:center;
+}
+
+.header img{
+  height:42px;
+  margin-right:12px;
+}
+
+.header span{
+  font-size:20px;
+  font-weight:bold;
+}
+
+/* ✅ LOGOUT ROSSO */
+.logout-btn{
+  background:var(--danger);
+  border:none;
+  color:white;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+}
+.logout-btn:hover{
+  background:#c62828;
+}
+
+/* ✅ TAB BAR */
+.tabs{
+  display:flex;
+  background:white;
+  border-bottom:1px solid #ddd;
+}
+.tab{
+  flex:1;
+  text-align:center;
+  padding:12px;
+  cursor:pointer;
+  font-weight:bold;
+  color:#555;
+}
+.tab.active{
+  color:var(--primary);
+  border-bottom:3px solid var(--primary);
+}
+.tab.admin{ display:none; }
+
+/* LAYOUT */
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:20px;
+}
+
+.card{
+  background:white;
+  border-radius:15px;
+  padding:20px;
+  margin-bottom:20px;
+  box-shadow:0 4px 10px rgba(0,0,0,.08);
+}
+
+select,input,button{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border-radius:8px;
+  border:1px solid #ddd;
+  font-size:15px;
+}
+
+/* BOTTONI */
+button{
+  cursor:pointer;
+  background:var(--primary);
+  color:white;
+  border:none;
+}
+button:hover{ background:var(--primary-dark); }
+
+.delete-btn{
+  background:var(--danger);
+  padding:6px 10px;
+}
+.delete-btn:hover{ background:#c62828; }
+
+.item{
+  border-bottom:1px solid #eee;
+  padding:10px 0;
+}
+</style>
+</head>
+
+<body style="display:none">
+
+<!-- ✅ HEADER -->
+<div class="header">
+  <div class="header-left">
+    <img src="logo.png" alt="Logo">
+    <span>GVP</span>
+  </div>
+  <button id="logoutBtn" class="logout-btn">Logout</button>
+</div>
+
+<!-- ✅ TAB NAV -->
+<div class="tabs">
+  <div class="tab active" id="tabPrenota">Prenotazioni</div>
+  <div class="tab" id="tabAgenda">Agenda</div>
+  <div class="tab admin" id="tabDashboard">Dashboard</div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h3>Nuova prenotazione</h3>
+
+    <select id="ospedale">
+      <option value="">Seleziona ospedale</option>
+    </select>
+
+    <select id="fasciaOraria" disabled>
+      <option value="">Fascia oraria</option>
+      <option value="pomeridiana">Pomeridiana</option>
+      <option value="serale">Serale</option>
+    </select>
+
+    <input id="data" placeholder="Seleziona data" disabled>
+
+    <button id="prenotaBtn" onclick="prenota()" disabled>Prenota</button>
+  </div>
+
+  <div class="card">
+    <h3>Le tue prenotazioni</h3>
+    <div id="listaPrenotazioni"></div>
+  </div>
+
+</div>
+
+<!-- FLATPICKR -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, collection, getDocs, addDoc,
+  deleteDoc, query, where, doc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyDZUTVFhbATsDmBP0VOr7fmfPByQGqwSIE",
+  authDomain:"prenotazioni-cas.firebaseapp.com",
+  projectId:"prenotazioni-cas"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+const adminEmail="admin@admin.com";
+
+const ospedale=document.getElementById("ospedale");
+const fascia=document.getElementById("fasciaOraria");
+const dataInput=document.getElementById("data");
+const prenotaBtn=document.getElementById("prenotaBtn");
+
+const tabAgenda=document.getElementById("tabAgenda");
+const tabDashboard=document.getElementById("tabDashboard");
+const tabPrenota=document.getElementById("tabPrenota");
+
+let flatpickrInstance=null;
+
+/* AUTH */
+onAuthStateChanged(auth, async user=>{
+  if(!user){ location="index.html"; return; }
+  document.body.style.display="block";
+
+  if(user.email.toLowerCase()===adminEmail){
+    tabDashboard.style.display="block";
+  }
+
+  await caricaOspedali();
+  await caricaPrenotazioni();
+});
+
+/* TAB NAV */
+tabAgenda.onclick=()=>location="agenda.html";
+tabDashboard.onclick=()=>location="dashboard.html";
+tabPrenota.onclick=()=>location="prenotazione.html";
+
+/* LOGOUT */
+logoutBtn.onclick=()=>auth.signOut().then(()=>location="index.html");
+
+/* OSPEDALI */
+async function caricaOspedali(){
+  ospedale.innerHTML="<option value=''>Seleziona ospedale</option>";
+  const snap=await getDocs(collection(db,"ospedali"));
+  snap.forEach(d=>{
+    ospedale.innerHTML+=`<option value="${d.data().nome}">${d.data().nome}</option>`;
+  });
+
+  ospedale.onchange=()=>{
+    fascia.disabled=false;
+    dataInput.disabled=false;
+    prenotaBtn.disabled=true;
+  };
+}
+
+/* CALENDARIO */
+fascia.onchange=()=>{
+  if(flatpickrInstance) flatpickrInstance.destroy();
+  flatpickrInstance=flatpickr("#data",{
+    dateFormat:"Y-m-d",
+    onChange:()=>prenotaBtn.disabled=false
+  });
+};
+
+/* PRENOTA */
+window.prenota=async()=>{
+  const user=auth.currentUser;
+  await addDoc(collection(db,"prenotazioni"),{
+    ospedale:ospedale.value,
+    fasciaOraria:fascia.value,
+    data:dataInput.value,
+    email:user.email
+  });
+  caricaPrenotazioni();
+};
+
+/* PRENOTAZIONI */
+async function caricaPrenotazioni(){
+  const q=query(
+    collection(db,"prenotazioni"),
+    where("email","==",auth.currentUser.email)
+  );
+  const snap=await getDocs(q);
+  listaPrenotazioni.innerHTML="";
+  snap.forEach(d=>{
+    const p=d.data();
+    listaPrenotazioni.innerHTML+=`
+      <div class="item">
+        ${p.ospedale} – ${p.data} – ${p.fasciaOraria}
+        <button class="delete-btn" onclick="elimina('${d.id}')">X</button>
+      </div>`;
+  });
+}
+
+window.elimina=async id=>{
+  if(!confirm("Confermi cancellazione?")) return;
+  await deleteDoc(doc(db,"prenotazioni",id));
+  caricaPrenotazioni();
+};
+</script>
+
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aggiungi Paziente</title>
+
+<style>
+body{
+  font-family: Arial;
+  background:#f5f7fb;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  margin:0;
+}
+.card{
+  background:white;
+  padding:30px;
+  border-radius:15px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+  width:350px;
+}
+h2{text-align:center;margin-bottom:20px}
+input, select{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+button{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#3498db;
+  color:white;
+  cursor:pointer;
+}
+button:hover{background:#2980b9}
+#indietroBtn{
+  background:#e74c3c;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body style="display:none;">
+
+<div class="card">
+  <h2>Aggiungi Paziente</h2>
+
+  <input id="nome" placeholder="Nome paziente">
+
+  <!-- ✅ solo ospedali esistenti -->
+  <select id="ospedale">
+    <option value="">Seleziona ospedale</option>
+  </select>
+
+  <input id="reparto" placeholder="Reparto">
+  <input id="stanza" placeholder="Stanza">
+
+  <button id="salvaBtn">Salva</button>
+  <button id="indietroBtn">Indietro</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from
+  "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, collection, addDoc, getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* 🔐 Firebase */
+const firebaseConfig = {
+  apiKey: "AIzaSyDZUTVFhbATsDmBP0VOr7fmfPByQGqwSIE",
+  authDomain: "prenotazioni-cas.firebaseapp.com",
+  projectId: "prenotazioni-cas",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+/* ✅ riferimenti DOM (PRIMA di usarli!) */
+const nomeInput = document.getElementById("nome");
+const ospedaleSelect = document.getElementById("ospedale");
+const repartoInput = document.getElementById("reparto");
+const stanzaInput = document.getElementById("stanza");
+const salvaBtn = document.getElementById("salvaBtn");
+const indietroBtn = document.getElementById("indietroBtn");
+
+/* 🔐 Mostra pagina solo se loggato */
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){
+    window.location = "index.html";
+    return;
+  }
+  document.body.style.display = "flex";
+  await caricaOspedali();
+});
+
+/* 🏥 Carica ospedali esistenti */
+async function caricaOspedali(){
+  ospedaleSelect.innerHTML = '<option value="">Seleziona ospedale</option>';
+  const snap = await getDocs(collection(db,"ospedali"));
+  snap.forEach(docSnap=>{
+    const o = docSnap.data();
+    ospedaleSelect.innerHTML += `
+      <option value="${o.nome}">
+        ${o.nome}${o.indirizzo ? " - " + o.indirizzo : ""}
+      </option>`;
+  });
+}
+
+/* ✅ SALVA PAZIENTE */
+salvaBtn.addEventListener("click", async ()=>{
+  const nome = nomeInput.value.trim();
+  const ospedale = ospedaleSelect.value;
+  const reparto = repartoInput.value.trim();
+  const stanza = stanzaInput.value.trim();
+
+  if(!nome || !ospedale || !reparto || !stanza){
+    alert("Compila tutti i campi!");
+    return;
+  }
+
+  await addDoc(collection(db,"pazienti"),{
+    nome,
+    ospedale,
+    reparto,
+    stanza
+  });
+
+  alert("✅ Paziente aggiunto correttamente");
+  window.location = "dashboard.html";
+});
+
+/* 🔙 INDIETRO */
+indietroBtn.addEventListener("click", ()=>{
+  window.location = "dashboard.html";
+});
+</script>
+
+</body>
+</html>
+``

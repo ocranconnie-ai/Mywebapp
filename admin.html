@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+<h2>Inserisci Paziente</h2>
+
+<input id="nome" placeholder="Nome paziente"><br><br>
+<input id="ospedale" placeholder="Ospedale"><br><br>
+<input id="reparto" placeholder="Reparto"><br><br>
+<input id="stanza" placeholder="Stanza"><br><br>
+
+<button onclick="salva()">Salva</button>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+ apiKey: "AIzaSyDZUTVFhbATsDmBP0VOr7fmfPByQGqwSIE",
+ authDomain: "prenotazioni-cas.firebaseapp.com",
+ projectId: "prenotazioni-cas",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.salva = async function(){
+
+let nome = document.getElementById("nome").value
+let ospedale = document.getElementById("ospedale").value
+let reparto = document.getElementById("reparto").value
+let stanza = document.getElementById("stanza").value
+
+await addDoc(collection(db,"pazienti"),{
+
+nome:nome,
+ospedale:ospedale,
+reparto:reparto,
+stanza:stanza
+
+})
+
+alert("Paziente salvato")
+
+}
+
+</script>
+
+</body>
+</html>
