@@ -2,19 +2,80 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Login Prenotazioni</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+
+  <style>
+    body{
+      font-family: Arial;
+      background:#f5f7fb;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      margin:0;
+    }
+
+    .card{
+      background:white;
+      padding:30px;
+      border-radius:15px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.1);
+      width:300px;
+      text-align:center;
+    }
+
+    h2{ margin-bottom:20px; }
+
+    input{
+      width:100%;
+      padding:10px;
+      margin-bottom:15px;
+      border-radius:8px;
+      border:1px solid #ddd;
+      font-size:15px;
+    }
+
+    button{
+      width:100%;
+      padding:10px;
+      background:#2196f3;
+      color:white;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:15px;
+    }
+
+    button:hover{ background:#1976d2; }
+  </style>
 </head>
-<body style="text-align:center">
 
-  <img src="logo.png" alt="Logo" style="width:150px; margin-bottom:20px">
+<body>
 
-  <h2>Login</h2>
+  <div class="card">
+    <h2>Accedi</h2>
 
-  <input type="email" id="email" placeholder="Email"><br><br>
-  <input type="password" id="password" placeholder="Password"><br><br>
+    <input
+      type="email"
+      id="email"
+      placeholder="Email"
+      autocomplete="username"
+    >
 
-  <button onclick="login()">Login</button>
+    <input
+      type="password"
+      id="password"
+      placeholder="Password"
+      autocomplete="current-password"
+    >
 
+    <!-- 🔑 NON submit -->
+    <button type="button" onclick="login()">Accedi</button>
+  </div>
+
+  <!-- 🔥 QUESTO È FONDAMENTALE -->
   <script type="module" src="app.js"></script>
+
 </body>
 </html>
