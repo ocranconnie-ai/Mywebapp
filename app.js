@@ -20,7 +20,7 @@ import {
 
 // 🔐 CONFIG FIREBASE
 const firebaseConfig = {
-  apiKey: "AIzaSyANDvPxDVueY2BRQ7eLMparQeMlstMdwno",
+  apiKey: "__FIREBASE_API_KEY__",
   authDomain: "prenotazioni-cas.firebaseapp.com",
   projectId: "prenotazioni-cas",
   storageBucket: "prenotazioni-cas.firebasestorage.app",
