@@ -166,9 +166,7 @@ button:hover{ background:var(--primary-dark); }
 
     <input type="text" id="data" placeholder="Seleziona data" disabled>
 
-    <input type="text" id="nome" placeholder="Nome" disabled>
-
-    <input type="text" id="cognome" placeholder="Cognome" disabled>
+    <input type="text" id="nomeCompleto" placeholder="Nome e Cognome" disabled>
 
     <button id="prenotaBtn" onclick="prenota()" disabled>Prenota</button>
   </div>
@@ -206,8 +204,7 @@ const adminEmail="admin@admin.com";
 const ospedale=document.getElementById("ospedale");
 const fascia=document.getElementById("fasciaOraria");
 const dataInput=document.getElementById("data");
-const nomeInput=document.getElementById("nome");
-const cognomeInput=document.getElementById("cognome");
+const nomeCompletoInput=document.getElementById("nomeCompleto");
 const prenotaBtn=document.getElementById("prenotaBtn");
 
 const tabAgenda=document.getElementById("tabAgenda");
@@ -265,8 +262,7 @@ fascia.onchange=()=>{
     minDate:"today",
     maxDate:maxDate,
     onChange:()=>{
-      nomeInput.disabled=false;
-      cognomeInput.disabled=false;
+      nomeCompletoInput.disabled=false;
       checkFormComplete();
     }
   });
@@ -274,13 +270,12 @@ fascia.onchange=()=>{
 
 /* CHECK FORM COMPLETENESS */
 function checkFormComplete(){
-  const allFilled=ospedale.value && fascia.value && dataInput.value && nomeInput.value.trim() && cognomeInput.value.trim();
+  const allFilled=ospedale.value && fascia.value && dataInput.value && nomeCompletoInput.value.trim();
   prenotaBtn.disabled=!allFilled;
 }
 
 /* INPUT LISTENERS */
-nomeInput.addEventListener("input", checkFormComplete);
-cognomeInput.addEventListener("input", checkFormComplete);
+nomeCompletoInput.addEventListener("input", checkFormComplete);
 
 /* PRENOTA */
 window.prenota=async()=>{
@@ -289,21 +284,18 @@ window.prenota=async()=>{
     ospedale:ospedale.value,
     fasciaOraria:fascia.value,
     data:dataInput.value,
-    nome:nomeInput.value.trim(),
-    cognome:cognomeInput.value.trim(),
+    nomeCompleto:nomeCompletoInput.value.trim(),
     email:user.email
   });
   caricaPrenotazioni();
   ospedale.value="";
   fascia.value="";
   dataInput.value="";
-  nomeInput.value="";
-  cognomeInput.value="";
+  nomeCompletoInput.value="";
   prenotaBtn.disabled=true;
   fascia.disabled=true;
   dataInput.disabled=true;
-  nomeInput.disabled=true;
-  cognomeInput.disabled=true;
+  nomeCompletoInput.disabled=true;
 };
 
 /* PRENOTAZIONI */
@@ -318,7 +310,7 @@ async function caricaPrenotazioni(){
     const p=d.data();
     listaPrenotazioni.innerHTML+=`
       <div class="item">
-        ${p.ospedale} – ${p.data} – ${p.fasciaOraria} – ${p.nome} ${p.cognome}
+        ${p.ospedale} – ${p.data} – ${p.fasciaOraria} – ${p.nomeCompleto}
         <button class="delete-btn" onclick="elimina('${d.id}')">X</button>
       </div>`;
   });
