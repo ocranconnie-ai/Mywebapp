@@ -106,6 +106,7 @@ select,input,button{
   border-radius:8px;
   border:1px solid #ddd;
   font-size:15px;
+  box-sizing:border-box;
 }
 
 /* BOTTONI */
@@ -163,7 +164,11 @@ button:hover{ background:var(--primary-dark); }
       <option value="serale">Serale</option>
     </select>
 
-    <input id="data" placeholder="Seleziona data" disabled>
+    <input type="text" id="data" placeholder="Seleziona data" disabled>
+
+    <input type="text" id="nome" placeholder="Nome" disabled>
+
+    <input type="text" id="cognome" placeholder="Cognome" disabled>
 
     <button id="prenotaBtn" onclick="prenota()" disabled>Prenota</button>
   </div>
@@ -201,6 +206,8 @@ const adminEmail="admin@admin.com";
 const ospedale=document.getElementById("ospedale");
 const fascia=document.getElementById("fasciaOraria");
 const dataInput=document.getElementById("data");
+const nomeInput=document.getElementById("nome");
+const cognomeInput=document.getElementById("cognome");
 const prenotaBtn=document.getElementById("prenotaBtn");
 
 const tabAgenda=document.getElementById("tabAgenda");
@@ -248,11 +255,32 @@ async function caricaOspedali(){
 /* CALENDARIO */
 fascia.onchange=()=>{
   if(flatpickrInstance) flatpickrInstance.destroy();
+  
+  const today=new Date();
+  const maxDate=new Date();
+  maxDate.setDate(maxDate.getDate()+7);
+  
   flatpickrInstance=flatpickr("#data",{
     dateFormat:"Y-m-d",
-    onChange:()=>prenotaBtn.disabled=false
+    minDate:"today",
+    maxDate:maxDate,
+    onChange:()=>{
+      nomeInput.disabled=false;
+      cognomeInput.disabled=false;
+      checkFormComplete();
+    }
   });
 };
+
+/* CHECK FORM COMPLETENESS */
+function checkFormComplete(){
+  const allFilled=ospedale.value && fascia.value && dataInput.value && nomeInput.value.trim() && cognomeInput.value.trim();
+  prenotaBtn.disabled=!allFilled;
+}
+
+/* INPUT LISTENERS */
+nomeInput.addEventListener("input", checkFormComplete);
+cognomeInput.addEventListener("input", checkFormComplete);
 
 /* PRENOTA */
 window.prenota=async()=>{
@@ -261,9 +289,21 @@ window.prenota=async()=>{
     ospedale:ospedale.value,
     fasciaOraria:fascia.value,
     data:dataInput.value,
+    nome:nomeInput.value.trim(),
+    cognome:cognomeInput.value.trim(),
     email:user.email
   });
   caricaPrenotazioni();
+  ospedale.value="";
+  fascia.value="";
+  dataInput.value="";
+  nomeInput.value="";
+  cognomeInput.value="";
+  prenotaBtn.disabled=true;
+  fascia.disabled=true;
+  dataInput.disabled=true;
+  nomeInput.disabled=true;
+  cognomeInput.disabled=true;
 };
 
 /* PRENOTAZIONI */
@@ -278,7 +318,7 @@ async function caricaPrenotazioni(){
     const p=d.data();
     listaPrenotazioni.innerHTML+=`
       <div class="item">
-        ${p.ospedale} – ${p.data} – ${p.fasciaOraria}
+        ${p.ospedale} – ${p.data} – ${p.fasciaOraria} – ${p.nome} ${p.cognome}
         <button class="delete-btn" onclick="elimina('${d.id}')">X</button>
       </div>`;
   });
