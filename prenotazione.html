@@ -5,17 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prenotazioni</title>
 
-<!-- FLATPICKR CSS -->
+<!-- FLATPICKR -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
 <style>
 :root{
   --primary:#2196f3;
   --primary-dark:#1976d2;
-  --secondary:#64b5f6;
   --danger:#e53935;
   --bg:#f5f7fb;
-  --warning:#ff9800;
 }
 
 body{
@@ -24,13 +22,13 @@ body{
   margin:0;
 }
 
-/* ✅ HEADER */
+/* HEADER */
 .header{
   background:var(--primary);
   color:white;
   display:flex;
-  align-items:center;
   justify-content:space-between;
+  align-items:center;
   padding:10px 16px;
 }
 
@@ -49,7 +47,6 @@ body{
   font-weight:bold;
 }
 
-/* ✅ LOGOUT ROSSO */
 .logout-btn{
   background:var(--danger);
   border:none;
@@ -57,20 +54,15 @@ body{
   padding:6px 12px;
   border-radius:6px;
   cursor:pointer;
-  font-size:14px;
-  width:auto;
-  margin:0;
-}
-.logout-btn:hover{
-  background:#c62828;
 }
 
-/* ✅ TAB BAR */
+/* TAB BAR */
 .tabs{
   display:flex;
   background:white;
   border-bottom:1px solid #ddd;
 }
+
 .tab{
   flex:1;
   text-align:center;
@@ -79,10 +71,12 @@ body{
   font-weight:bold;
   color:#555;
 }
+
 .tab.active{
   color:var(--primary);
   border-bottom:3px solid var(--primary);
 }
+
 .tab.admin{ display:none; }
 
 /* LAYOUT */
@@ -110,73 +104,20 @@ select,input,button{
   box-sizing:border-box;
 }
 
-/* BOTTONI */
 button{
-  cursor:pointer;
   background:var(--primary);
   color:white;
   border:none;
-}
-button:hover{ background:var(--primary-dark); }
-
-.item{
-  border-bottom:1px solid #eee;
-  padding:10px 0;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.item-info{
-  flex:1;
-}
-
-/* ✅ DELETE BUTTON - PROFESSIONAL */
-.delete-btn{
-  background:transparent;
-  border:none;
-  color:var(--danger);
-  font-size:20px;
   cursor:pointer;
-  padding:0;
-  margin-left:10px;
-  transition:all 0.2s ease;
-  font-weight:bold;
-}
-.delete-btn:hover{
-  color:#c62828;
-  transform:scale(1.2);
 }
 
-/* ✅ CALENDAR - FULL DATE */
-.flatpickr-day.full{
-  background:#ffcdd2 !important;
-  color:#c62828 !important;
-  font-weight:bold;
-  cursor:not-allowed !important;
-  pointer-events:none;
-}
-
-/* ✅ CALENDAR - PARTIALLY FULL (ONE FASCIA FULL) */
-.flatpickr-day.partial{
-  background:#fff3cd !important;
-  color:#ff6f00 !important;
-  font-weight:bold;
-  border:2px solid var(--warning) !important;
-}
-  
-  /* ✅ ITEM LIST STYLE ALLINEATO AL DASHBOARD */
+/* ✅ STESSO IDENTICO FORMAT DEL DASHBOARD */
 .item{
   display:flex;
   justify-content:space-between;
   align-items:center;
   padding:8px 0;
   border-bottom:1px solid #eee;
-  font-size:14px;
-}
-
-.item strong{
-  font-weight:bold;
 }
 
 .btn-delete{
@@ -186,7 +127,6 @@ button:hover{ background:var(--primary-dark); }
   border-radius:6px;
   padding:5px 8px;
   cursor:pointer;
-  transition:.15s;
 }
 
 .btn-delete:hover{
@@ -197,7 +137,7 @@ button:hover{ background:var(--primary-dark); }
 
 <body style="display:none">
 
-<!-- ✅ HEADER -->
+<!-- HEADER -->
 <div class="header">
   <div class="header-left">
     <img src="logo.png" alt="Logo">
@@ -206,7 +146,7 @@ button:hover{ background:var(--primary-dark); }
   <button id="logoutBtn" class="logout-btn">Logout</button>
 </div>
 
-<!-- ✅ TAB NAV -->
+<!-- TAB NAV -->
 <div class="tabs">
   <div class="tab active" id="tabPrenota">Prenotazioni</div>
   <div class="tab" id="tabAgenda">Agenda</div>
@@ -215,6 +155,7 @@ button:hover{ background:var(--primary-dark); }
 
 <div class="container">
 
+  <!-- NUOVA PRENOTAZIONE -->
   <div class="card">
     <h3>Nuova prenotazione</h3>
 
@@ -229,12 +170,12 @@ button:hover{ background:var(--primary-dark); }
     </select>
 
     <input type="text" id="data" placeholder="Seleziona data" disabled>
-
     <input type="text" id="nomeCompleto" placeholder="Nome e Cognome" disabled>
 
     <button id="prenotaBtn" onclick="prenota()" disabled>Prenota</button>
   </div>
 
+  <!-- LE TUE PRENOTAZIONI -->
   <div class="card">
     <h3>Le tue prenotazioni</h3>
     <div id="listaPrenotazioni"></div>
@@ -242,60 +183,46 @@ button:hover{ background:var(--primary-dark); }
 
 </div>
 
-<!-- FLATPICKR -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, collection, getDocs, addDoc,
   deleteDoc, query, where, doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig={
-  apiKey: "__FIREBASE_API_KEY__",
+const app = initializeApp({
+  apiKey:"__FIREBASE_API_KEY__",
   authDomain:"prenotazioni-cas.firebaseapp.com",
   projectId:"prenotazioni-cas"
-};
+});
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
-const adminEmail="admin@admin.com";
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-const ospedale=document.getElementById("ospedale");
-const fascia=document.getElementById("fasciaOraria");
-const dataInput=document.getElementById("data");
-const nomeCompletoInput=document.getElementById("nomeCompleto");
-const prenotaBtn=document.getElementById("prenotaBtn");
+const adminEmail = "admin@admin.com";
 
-const tabAgenda=document.getElementById("tabAgenda");
-const tabDashboard=document.getElementById("tabDashboard");
-const tabPrenota=document.getElementById("tabPrenota");
+const ospedale = document.getElementById("ospedale");
+const fascia = document.getElementById("fasciaOraria");
+const dataInput = document.getElementById("data");
+const nomeCompletoInput = document.getElementById("nomeCompleto");
+const prenotaBtn = document.getElementById("prenotaBtn");
 
-let flatpickrInstance=null;
+const tabAgenda = document.getElementById("tabAgenda");
+const tabDashboard = document.getElementById("tabDashboard");
 
-/* AUTH */
 onAuthStateChanged(auth, async user=>{
   if(!user){ location="index.html"; return; }
   document.body.style.display="block";
-
-  if(user.email.toLowerCase()===adminEmail){
-    tabDashboard.style.display="block";
-  }
-
+  if(user.email===adminEmail) tabDashboard.style.display="block";
   await caricaOspedali();
   await caricaPrenotazioni();
 });
 
-/* TAB NAV */
 tabAgenda.onclick=()=>location="agenda.html";
 tabDashboard.onclick=()=>location="dashboard.html";
-tabPrenota.onclick=()=>location="prenotazione.html";
-
-/* LOGOUT */
 logoutBtn.onclick=()=>auth.signOut().then(()=>location="index.html");
 
 /* OSPEDALI */
@@ -303,131 +230,32 @@ async function caricaOspedali(){
   ospedale.innerHTML="<option value=''>Seleziona ospedale</option>";
   const snap=await getDocs(collection(db,"ospedali"));
   snap.forEach(d=>{
-    ospedale.innerHTML+=`<option value="${d.data().nome}">${d.data().nome}</option>`;
+    ospedale.innerHTML+=`<option>${d.data().nome}</option>`;
   });
-
   ospedale.onchange=()=>{
     fascia.disabled=false;
     dataInput.disabled=false;
-    prenotaBtn.disabled=true;
   };
 }
 
-/* COUNT BOOKINGS FOR DATE/FASCIA/OSPEDALE */
-async function contaPrenotazioni(data, fasciaOraria, ospedaleNome){
-  const q=query(
-    collection(db,"prenotazioni"),
-    where("data","==",data),
-    where("fasciaOraria","==",fasciaOraria),
-    where("ospedale","==",ospedaleNome)
-  );
-  const snap=await getDocs(q);
-  return snap.size;
-}
-
-/* CALENDARIO */
+/* PRENOTAZIONE */
 fascia.onchange=()=>{
-  if(flatpickrInstance) flatpickrInstance.destroy();
-  
-  const today=new Date();
-  const maxDate=new Date();
-  maxDate.setDate(maxDate.getDate()+7);
-  
-  flatpickrInstance=flatpickr("#data",{
-    dateFormat:"Y-m-d",
-    minDate:"today",
-    maxDate:maxDate,
-    onChange:()=>{
-      nomeCompletoInput.disabled=false;
-      checkFormComplete();
-    },
-    onReady:()=>{
-      highlightFullDates();
-    }
-  });
+  flatpickr("#data",{ dateFormat:"Y-m-d", minDate:"today" });
+  nomeCompletoInput.disabled=false;
 };
 
-/* HIGHLIGHT FULL AND PARTIAL DATES IN CALENDAR */
-async function highlightFullDates(){
-  if(!ospedale.value || !fascia.value) return;
-  
-  const days=document.querySelectorAll(".flatpickr-day");
-  for(let day of days){
-    if(day.classList.contains("prevMonthDay") || day.classList.contains("nextMonthDay")) continue;
-    
-    const dateNum=day.textContent.trim();
-    if(!dateNum || dateNum==="") continue;
-    
-    const currentMonth=flatpickrInstance.currentMonth;
-    const currentYear=flatpickrInstance.currentYear;
-    const dateStr=`${currentYear}-${String(currentMonth+1).padStart(2,"0")}-${String(dateNum).padStart(2,"0")}`;
-    
-    const countPomeridiana=await contaPrenotazioni(dateStr, "pomeridiana", ospedale.value);
-    const countSerale=await contaPrenotazioni(dateStr, "serale", ospedale.value);
-    
-    // Remove previous classes
-    day.classList.remove("full", "partial");
-    
-    // Check current selected fascia oraria
-    if(fascia.value==="pomeridiana"){
-      // User selecting pomeridiana - highlight if pomeridiana is full
-      if(countPomeridiana>=2){
-        day.classList.add("partial");
-      }
-    } else if(fascia.value==="serale"){
-      // User selecting serale - highlight if serale is full
-      if(countSerale>=2){
-        day.classList.add("partial");
-      }
-    }
-    
-    // If both are full, show red
-    if(countPomeridiana>=2 && countSerale>=2){
-      day.classList.remove("partial");
-      day.classList.add("full");
-    }
-  }
-}
-
-/* CHECK FORM COMPLETENESS */
-function checkFormComplete(){
-  const allFilled=ospedale.value && fascia.value && dataInput.value && nomeCompletoInput.value.trim();
-  prenotaBtn.disabled=!allFilled;
-}
-
-/* INPUT LISTENERS */
-nomeCompletoInput.addEventListener("input", checkFormComplete);
-
-/* PRENOTA */
 window.prenota=async()=>{
-  const user=auth.currentUser;
-  const count=await contaPrenotazioni(dataInput.value, fascia.value, ospedale.value);
-  
-  if(count>=2){
-    alert("Questa fascia oraria è piena!");
-    return;
-  }
-  
   await addDoc(collection(db,"prenotazioni"),{
     ospedale:ospedale.value,
     fasciaOraria:fascia.value,
     data:dataInput.value,
-    nomeCompleto:nomeCompletoInput.value.trim(),
-    email:user.email
+    nomeCompleto:nomeCompletoInput.value,
+    email:auth.currentUser.email
   });
   caricaPrenotazioni();
-  highlightFullDates();
-  ospedale.value="";
-  fascia.value="";
-  dataInput.value="";
-  nomeCompletoInput.value="";
-  prenotaBtn.disabled=true;
-  fascia.disabled=true;
-  dataInput.disabled=true;
-  nomeCompletoInput.disabled=true;
 };
 
-/* PRENOTAZIONI */
+/* ✅ STESSO FORMAT DEL DASHBOARD */
 async function caricaPrenotazioni(){
   const q=query(
     collection(db,"prenotazioni"),
@@ -437,23 +265,25 @@ async function caricaPrenotazioni(){
   listaPrenotazioni.innerHTML="";
   snap.forEach(d=>{
     const p=d.data();
-    listaPrenotazioni.innerHTML+=`
-      <div class="item">
-        <div class="item-info">
-          ${p.ospedale} – ${p.data} – ${p.fasciaOraria} – ${p.nomeCompleto}
-        </div>
-        <button class="delete-btn" onclick="elimina('${d.id}')" title="Elimina prenotazione">×</button>
-      </div>`;
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerHTML=`
+      <span>
+        <strong>${p.nomeCompleto}</strong> – ${p.ospedale} – ${p.data}
+        <br>
+        <small style="color:#666">${p.fasciaOraria}</small>
+      </span>
+      <button class="btn-delete">🗑</button>
+    `;
+    div.querySelector("button").onclick=async()=>{
+      if(confirm("Confermi cancellazione?")){
+        await deleteDoc(doc(db,"prenotazioni",d.id));
+        caricaPrenotazioni();
+      }
+    };
+    listaPrenotazioni.appendChild(div);
   });
 }
-
-window.elimina=async id=>{
-  if(!confirm("Confermi cancellazione?")) return;
-  await deleteDoc(doc(db,"prenotazioni",id));
-  caricaPrenotazioni();
-  highlightFullDates();
-};
 </script>
-
 </body>
 </html>
