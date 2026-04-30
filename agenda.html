@@ -15,7 +15,7 @@
 }
 
 body{
-  font-family: Arial, sans-serif;
+  font-family:Arial, sans-serif;
   background:var(--bg);
   margin:0;
 }
@@ -45,15 +45,14 @@ body{
   font-weight:bold;
 }
 
-/* ✅ LOGOUT ROSSO */
+/* ✅ LOGOUT */
 .logout-btn{
   background:var(--danger);
   border:none;
   color:white;
-  padding:6px 12px;
+  padding:6px 14px;
   border-radius:6px;
   cursor:pointer;
-  font-size:14px;
 }
 .logout-btn:hover{
   background:#c62828;
@@ -68,7 +67,7 @@ body{
 .tab{
   flex:1;
   text-align:center;
-  padding:12px;
+  padding:14px;
   cursor:pointer;
   font-weight:bold;
   color:#555;
@@ -95,7 +94,7 @@ h2{
 
 .grid{
   display:grid;
-  grid-template-columns:repeat(7,1fr);
+  grid-template-columns:repeat(7, 1fr);
   gap:6px;
 }
 
@@ -106,7 +105,7 @@ h2{
 }
 
 .day{
-  min-height:100px;
+  min-height:110px;
   border:1px solid #ddd;
   border-radius:8px;
   padding:6px;
@@ -118,13 +117,71 @@ h2{
   margin-bottom:5px;
 }
 
+.day.today{
+  border:2px solid var(--primary);
+}
+
 .event{
   background:var(--secondary);
   color:white;
-  padding:3px 5px;
-  border-radius:4px;
+  padding:5px;
+  border-radius:6px;
   font-size:12px;
-  margin-bottom:3px;
+  margin-bottom:4px;
+}
+
+/* ✅ TABLET */
+@media (max-width:1024px){
+  .calendar{
+    max-width:95%;
+  }
+  .day{
+    min-height:120px;
+  }
+}
+
+/* ✅ MOBILE */
+@media (max-width:600px){
+
+  /* Header */
+  .header{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .logout-btn{
+    align-self:flex-end;
+  }
+
+  /* Tabs */
+  .tabs{
+    overflow-x:auto;
+  }
+  .tab{
+    min-width:120px;
+    font-size:14px;
+  }
+
+  /* Calendar as list */
+  .grid{
+    grid-template-columns:1fr;
+  }
+  .day-name{
+    display:none;
+  }
+  .day{
+    min-height:auto;
+    font-size:14px;
+  }
+  .event{
+    font-size:14px;
+  }
+
+  .calendar{
+    margin:10px;
+    padding:10px;
+    border-radius:10px;
+  }
 }
 </style>
 </head>
@@ -156,7 +213,7 @@ h2{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, getDocs }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* FIREBASE */
 const app = initializeApp({
@@ -181,16 +238,18 @@ const grid = document.getElementById("calendarGrid");
   grid.appendChild(el);
 });
 
-/* Mese corrente */
+/* Data */
 const now=new Date();
 const year=now.getFullYear();
 const month=now.getMonth();
+const today=now.getDate();
+
 const firstDay=new Date(year,month,1);
 const daysInMonth=new Date(year,month+1,0).getDate();
 let startDay=firstDay.getDay();
 startDay=startDay===0?6:startDay-1;
 
-/* Celle vuote iniziali */
+/* Celle vuote */
 for(let i=0;i<startDay;i++){
   grid.appendChild(document.createElement("div"));
 }
@@ -205,11 +264,13 @@ snap.forEach(d=>{
   prenotazioni[p.data].push(`${p.nome} (${p.fasciaOraria})`);
 });
 
-/* Giorni del mese */
+/* Giorni */
 for(let day=1;day<=daysInMonth;day++){
   const dateStr=`${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
   const cell=document.createElement("div");
   cell.className="day";
+  if(day===today) cell.classList.add("today");
+
   cell.innerHTML=`<div class="day-number">${day}</div>`;
 
   if(prenotazioni[dateStr]){
