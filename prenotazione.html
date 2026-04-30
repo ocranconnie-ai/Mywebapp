@@ -106,8 +106,24 @@ input{
   box-sizing:border-box;
 }
 
-/* ================= ICON BUTTONS ================= */
-/* ✅ dimensioni IDENTICHE a dashboard */
+/* ================= BOTTONI ================= */
+
+/* CTA grande (Prenota) */
+.btn-primary{
+  width:100%;
+  padding:10px;
+  background:var(--primary);
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:15px;
+}
+.btn-primary:hover{
+  background:var(--primary-dark);
+}
+
+/* Icon button (uguale dashboard) */
 .btn-icon{
   width:auto;
   height:auto;
@@ -128,20 +144,8 @@ input{
   background:none;
   color:var(--danger);
 }
-
 .btn-danger:hover{
   background:#fdeaea;
-}
-
-/* ✅ PULSANTE BLU PICCOLO (come cestino) */
-.btn-primary{
-  border:1px solid #bbdefb;
-  background:var(--primary);
-  color:white;
-}
-
-.btn-primary:hover{
-  background:var(--primary-dark);
 }
 
 /* ================= LISTA PRENOTAZIONI ================= */
@@ -160,7 +164,7 @@ input{
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <img src="logo.png">
+    <img src="logo.png" alt="Logo">
     <span>GVP</span>
   </div>
   <button id="logoutBtn" class="logout-btn">Logout</button>
@@ -192,9 +196,9 @@ input{
     <input type="text" id="data" placeholder="Seleziona data" disabled>
     <input type="text" id="nomeCompleto" placeholder="Nome e Cognome" disabled>
 
-    <!-- ✅ pulsante blu piccolo -->
-    <button id="prenotaBtn" class="btn-icon btn-primary" onclick="prenota()" disabled>
-      ✓
+    <!-- ✅ Prenota RIPRISTINATO (CTA grande) -->
+    <button id="prenotaBtn" class="btn-primary" onclick="prenota()" disabled>
+      Prenota
     </button>
   </div>
 
@@ -311,6 +315,5 @@ async function caricaPrenotazioni(){
   });
 }
 </script>
-
 </body>
 </html>
