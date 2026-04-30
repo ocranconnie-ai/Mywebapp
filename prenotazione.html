@@ -164,6 +164,34 @@ button:hover{ background:var(--primary-dark); }
   font-weight:bold;
   border:2px solid var(--warning) !important;
 }
+  
+  /* ✅ ITEM LIST STYLE ALLINEATO AL DASHBOARD */
+.item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 0;
+  border-bottom:1px solid #eee;
+  font-size:14px;
+}
+
+.item strong{
+  font-weight:bold;
+}
+
+.btn-delete{
+  border:1px solid #f2caca;
+  background:none;
+  color:var(--danger);
+  border-radius:6px;
+  padding:5px 8px;
+  cursor:pointer;
+  transition:.15s;
+}
+
+.btn-delete:hover{
+  background:#fdeaea;
+}
 </style>
 </head>
 
