@@ -9,13 +9,11 @@
 :root{
   --primary:#2196f3;
   --primary-dark:#1976d2;
-  --secondary:#64b5f6;
-  --warning:#fbc02d;
   --danger:#e53935;
   --bg:#f5f7fb;
 }
 body{
-  font-family:Arial;
+  font-family:Arial, sans-serif;
   background:var(--bg);
   margin:0;
 }
@@ -26,22 +24,6 @@ body{
   justify-content:space-between;
   align-items:center;
   padding:12px 16px;
-}
-.header-left{
-  display:flex;
-  align-items:center;
-}
-.header img{
-  height:40px;
-  margin-right:12px;
-}
-.logout-btn{
-  background:var(--danger);
-  border:none;
-  color:white;
-  padding:6px 12px;
-  border-radius:6px;
-  cursor:pointer;
 }
 .tabs{
   display:flex;
@@ -72,8 +54,8 @@ body{
 }
 .card{
   background:white;
-  border-radius:15px;
-  padding:15px;
+  border-radius:12px;
+  padding:16px;
   box-shadow:0 4px 10px rgba(0,0,0,.08);
 }
 .card-header{
@@ -82,25 +64,56 @@ body{
   align-items:center;
 }
 .item{
-  border-bottom:1px solid #eee;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
   padding:8px 0;
+  border-bottom:1px solid #eee;
 }
-button{
+
+/* ✅ BOTTONI PULITI */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
   padding:6px 12px;
-  border:none;
   border-radius:6px;
+  font-size:13px;
+  font-weight:600;
+  border:1px solid transparent;
   cursor:pointer;
+  transition:.15s;
+  background:none;
 }
-.primary-btn{
+.btn-primary{
   background:var(--primary);
   color:white;
 }
-.edit-btn{
-  background:var(--warning);
+.btn-primary:hover{ background:var(--primary-dark); }
+
+.btn-edit{
+  border:1px solid #ddd;
+  color:#444;
 }
-.delete-btn{
+.btn-edit:hover{ background:#f5f5f5; }
+
+.btn-delete{
+  border:1px solid #f2caca;
+  color:var(--danger);
+}
+.btn-delete:hover{ background:#fdeaea; }
+
+.btn-icon{
+  padding:5px 8px;
+}
+
+.logout-btn{
   background:var(--danger);
   color:white;
+  border:none;
+  border-radius:6px;
+  padding:6px 12px;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -108,10 +121,7 @@ button{
 <body style="display:none">
 
 <div class="header">
-  <div class="header-left">
-    <img src="logo.png">
-    <span>GVP</span>
-  </div>
+  <strong>GVP</strong>
   <button id="logoutBtn" class="logout-btn">Logout</button>
 </div>
 
@@ -136,7 +146,7 @@ button{
     <div class="card">
       <div class="card-header">
         <h3>Pazienti</h3>
-        <button id="btnNuovoPaz" class="primary-btn">➕ Nuovo</button>
+        <button id="btnNuovoPaz" class="btn btn-primary">＋ Nuovo</button>
       </div>
       <div id="listaPazienti"></div>
     </div>
@@ -145,7 +155,7 @@ button{
     <div class="card">
       <div class="card-header">
         <h3>Ospedali</h3>
-        <button id="btnNuovoOsp" class="primary-btn">➕ Nuovo</button>
+        <button id="btnNuovoOsp" class="btn btn-primary">＋ Nuovo</button>
       </div>
       <div id="listaOspedali"></div>
     </div>
@@ -156,23 +166,21 @@ button{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, deleteDoc, updateDoc, doc } 
+import { getFirestore, collection, getDocs, deleteDoc, updateDoc, doc }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const app = initializeApp({
-  apiKey: "__FIREBASE_API_KEY__",
+const app=initializeApp({
+  apiKey:"__FIREBASE_API_KEY__",
   authDomain:"prenotazioni-cas.firebaseapp.com",
   projectId:"prenotazioni-cas"
 });
-
-const auth = getAuth(app);
-const db = getFirestore(app);
+const auth=getAuth(app);
+const db=getFirestore(app);
 const adminEmail="admin@admin.com";
 
-onAuthStateChanged(auth, user=>{
+onAuthStateChanged(auth,user=>{
   if(!user || user.email!==adminEmail){
-    location="index.html";
-    return;
+    location="index.html"; return;
   }
   document.body.style.display="block";
   caricaPrenotazioni();
@@ -184,83 +192,78 @@ logoutBtn.onclick=()=>auth.signOut().then(()=>location="index.html");
 btnNuovoPaz.onclick=()=>location="aggiungiPaziente.html";
 btnNuovoOsp.onclick=()=>location="aggiungiOspedale.html";
 
-/* PRENOTAZIONI */
 async function caricaPrenotazioni(){
   listaPrenotazioni.innerHTML="";
-  const snap = await getDocs(collection(db,"prenotazioni"));
+  const snap=await getDocs(collection(db,"prenotazioni"));
   snap.forEach(d=>{
     const p=d.data();
-    const row=document.createElement("div");
-    row.className="item";
-    row.innerHTML=`
-      <strong>${p.nomeCompleto}</strong> – ${p.ospedale} – ${p.data}
-      <button class="delete-btn">X</button>
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerHTML=`
+      <span><strong>${p.nomeCompleto}</strong> – ${p.ospedale} – ${p.data}</span>
+      <button class="btn btn-delete btn-icon">🗑</button>
     `;
-    row.querySelector("button").onclick=async()=>{
+    div.querySelector("button").onclick=async()=>{
       if(confirm("Eliminare prenotazione?")){
         await deleteDoc(doc(db,"prenotazioni",d.id));
         caricaPrenotazioni();
       }
     };
-    listaPrenotazioni.appendChild(row);
+    listaPrenotazioni.appendChild(div);
   });
 }
 
-/* PAZIENTI */
 async function caricaPazienti(){
   listaPazienti.innerHTML="";
   const snap=await getDocs(collection(db,"pazienti"));
   snap.forEach(d=>{
-    const row=document.createElement("div");
-    row.className="item";
-    row.innerHTML=`
-      ${d.data().nome}
-      <button class="edit-btn">✏</button>
-      <button class="delete-btn">X</button>
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerHTML=`
+      <span>${d.data().nome}</span>
+      <div>
+        <button class="btn btn-edit btn-icon">✏</button>
+        <button class="btn btn-delete btn-icon">🗑</button>
+      </div>
     `;
-    row.querySelector(".edit-btn").onclick=async()=>{
-      const nuovo=prompt("Nuovo nome",d.data().nome);
-      if(nuovo){
-        await updateDoc(doc(db,"pazienti",d.id),{nome:nuovo});
-        caricaPazienti();
-      }
+    div.querySelector(".btn-edit").onclick=async()=>{
+      const n=prompt("Nuovo nome",d.data().nome);
+      if(n){ await updateDoc(doc(db,"pazienti",d.id),{nome:n}); caricaPazienti(); }
     };
-    row.querySelector(".delete-btn").onclick=async()=>{
+    div.querySelector(".btn-delete").onclick=async()=>{
       if(confirm("Eliminare paziente?")){
         await deleteDoc(doc(db,"pazienti",d.id));
         caricaPazienti();
       }
     };
-    listaPazienti.appendChild(row);
+    listaPazienti.appendChild(div);
   });
 }
 
-/* OSPEDALI */
 async function caricaOspedali(){
   listaOspedali.innerHTML="";
   const snap=await getDocs(collection(db,"ospedali"));
   snap.forEach(d=>{
-    const row=document.createElement("div");
-    row.className="item";
-    row.innerHTML=`
-      ${d.data().nome}
-      <button class="edit-btn">✏</button>
-      <button class="delete-btn">X</button>
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerHTML=`
+      <span>${d.data().nome}</span>
+      <div>
+        <button class="btn btn-edit btn-icon">✏</button>
+        <button class="btn btn-delete btn-icon">🗑</button>
+      </div>
     `;
-    row.querySelector(".edit-btn").onclick=async()=>{
-      const nuovo=prompt("Nuovo nome",d.data().nome);
-      if(nuovo){
-        await updateDoc(doc(db,"ospedali",d.id),{nome:nuovo});
-        caricaOspedali();
-      }
+    div.querySelector(".btn-edit").onclick=async()=>{
+      const n=prompt("Nuovo nome",d.data().nome);
+      if(n){ await updateDoc(doc(db,"ospedali",d.id),{nome:n}); caricaOspedali(); }
     };
-    row.querySelector(".delete-btn").onclick=async()=>{
+    div.querySelector(".btn-delete").onclick=async()=>{
       if(confirm("Eliminare ospedale?")){
         await deleteDoc(doc(db,"ospedali",d.id));
         caricaOspedali();
       }
     };
-    listaOspedali.appendChild(row);
+    listaOspedali.appendChild(div);
   });
 }
 </script>
