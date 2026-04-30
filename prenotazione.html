@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prenotazioni</title>
 
-<!-- FLATPICKR -->
+<!-- FLATPICKR CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
 <style>
@@ -22,7 +22,7 @@ body{
   margin:0;
 }
 
-/* HEADER */
+/* ================= HEADER ================= */
 .header{
   background:var(--primary);
   color:white;
@@ -54,9 +54,10 @@ body{
   padding:6px 12px;
   border-radius:6px;
   cursor:pointer;
+  width:auto; /* ✅ importante */
 }
 
-/* TAB BAR */
+/* ================= TAB BAR ================= */
 .tabs{
   display:flex;
   background:white;
@@ -77,9 +78,11 @@ body{
   border-bottom:3px solid var(--primary);
 }
 
-.tab.admin{ display:none; }
+.tab.admin{
+  display:none;
+}
 
-/* LAYOUT */
+/* ================= LAYOUT ================= */
 .container{
   max-width:500px;
   margin:auto;
@@ -94,7 +97,10 @@ body{
   box-shadow:0 4px 10px rgba(0,0,0,.08);
 }
 
-select,input,button{
+/* ✅ width:100% SOLO per elementi del form */
+select,
+input,
+.card button{
   width:100%;
   padding:10px;
   margin:10px 0;
@@ -104,14 +110,14 @@ select,input,button{
   box-sizing:border-box;
 }
 
-button{
+.card button{
   background:var(--primary);
   color:white;
   border:none;
   cursor:pointer;
 }
 
-/* ✅ STESSO IDENTICO FORMAT DEL DASHBOARD */
+/* ================= ITEM LIST (COME DASHBOARD) ================= */
 .item{
   display:flex;
   justify-content:space-between;
@@ -120,13 +126,16 @@ button{
   border-bottom:1px solid #eee;
 }
 
+/* ✅ cestino piccolo identico al dashboard */
 .btn-delete{
   border:1px solid #f2caca;
-  background:none;
   color:var(--danger);
+  background:none;
   border-radius:6px;
   padding:5px 8px;
   cursor:pointer;
+  font-size:13px;
+  line-height:1;
 }
 
 .btn-delete:hover{
@@ -137,7 +146,7 @@ button{
 
 <body style="display:none">
 
-<!-- HEADER -->
+<!-- ================= HEADER ================= -->
 <div class="header">
   <div class="header-left">
     <img src="logo.png" alt="Logo">
@@ -146,7 +155,7 @@ button{
   <button id="logoutBtn" class="logout-btn">Logout</button>
 </div>
 
-<!-- TAB NAV -->
+<!-- ================= TAB NAV ================= -->
 <div class="tabs">
   <div class="tab active" id="tabPrenota">Prenotazioni</div>
   <div class="tab" id="tabAgenda">Agenda</div>
@@ -183,6 +192,7 @@ button{
 
 </div>
 
+<!-- FLATPICKR -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script type="module">
@@ -228,7 +238,7 @@ logoutBtn.onclick=()=>auth.signOut().then(()=>location="index.html");
 /* OSPEDALI */
 async function caricaOspedali(){
   ospedale.innerHTML="<option value=''>Seleziona ospedale</option>";
-  const snap=await getDocs(collection(db,"ospedali"));
+  const snap = await getDocs(collection(db,"ospedali"));
   snap.forEach(d=>{
     ospedale.innerHTML+=`<option>${d.data().nome}</option>`;
   });
@@ -238,13 +248,14 @@ async function caricaOspedali(){
   };
 }
 
-/* PRENOTAZIONE */
+/* CALENDARIO */
 fascia.onchange=()=>{
   flatpickr("#data",{ dateFormat:"Y-m-d", minDate:"today" });
   nomeCompletoInput.disabled=false;
 };
 
-window.prenota=async()=>{
+/* PRENOTA */
+window.prenota = async ()=>{
   await addDoc(collection(db,"prenotazioni"),{
     ospedale:ospedale.value,
     fasciaOraria:fascia.value,
@@ -255,17 +266,18 @@ window.prenota=async()=>{
   caricaPrenotazioni();
 };
 
-/* ✅ STESSO FORMAT DEL DASHBOARD */
+/* ✅ FORMAT IDENTICO AL DASHBOARD */
 async function caricaPrenotazioni(){
-  const q=query(
+  const q = query(
     collection(db,"prenotazioni"),
     where("email","==",auth.currentUser.email)
   );
-  const snap=await getDocs(q);
+  const snap = await getDocs(q);
   listaPrenotazioni.innerHTML="";
+
   snap.forEach(d=>{
-    const p=d.data();
-    const div=document.createElement("div");
+    const p = d.data();
+    const div = document.createElement("div");
     div.className="item";
     div.innerHTML=`
       <span>
