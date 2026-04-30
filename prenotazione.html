@@ -54,7 +54,7 @@ body{
   padding:6px 12px;
   border-radius:6px;
   cursor:pointer;
-  width:auto; /* ✅ importante */
+  width:auto;
 }
 
 /* ================= TAB BAR ================= */
@@ -78,9 +78,7 @@ body{
   border-bottom:3px solid var(--primary);
 }
 
-.tab.admin{
-  display:none;
-}
+.tab.admin{ display:none; }
 
 /* ================= LAYOUT ================= */
 .container{
@@ -97,10 +95,8 @@ body{
   box-shadow:0 4px 10px rgba(0,0,0,.08);
 }
 
-/* ✅ width:100% SOLO per elementi del form */
 select,
-input,
-.card button{
+input{
   width:100%;
   padding:10px;
   margin:10px 0;
@@ -110,31 +106,13 @@ input,
   box-sizing:border-box;
 }
 
-.card button{
-  background:var(--primary);
-  color:white;
-  border:none;
-  cursor:pointer;
-}
-
-/* ================= ITEM LIST (COME DASHBOARD) ================= */
-.item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:8px 0;
-  border-bottom:1px solid #eee;
-}
-
-/* ✅ cestino piccolo identico al dashboard */
-.btn-delete{
+/* ================= ICON BUTTONS ================= */
+/* ✅ dimensioni IDENTICHE a dashboard */
+.btn-icon{
   width:auto;
   height:auto;
   padding:5px 8px;
   margin:0;
-  border:1px solid #f2caca;
-  background:none;
-  color:var(--danger);
   border-radius:6px;
   cursor:pointer;
   font-size:13px;
@@ -144,27 +122,53 @@ input,
   justify-content:center;
 }
 
+/* cestino */
+.btn-danger{
+  border:1px solid #f2caca;
+  background:none;
+  color:var(--danger);
+}
 
-.btn-delete:hover{
+.btn-danger:hover{
   background:#fdeaea;
+}
+
+/* ✅ PULSANTE BLU PICCOLO (come cestino) */
+.btn-primary{
+  border:1px solid #bbdefb;
+  background:var(--primary);
+  color:white;
+}
+
+.btn-primary:hover{
+  background:var(--primary-dark);
+}
+
+/* ================= LISTA PRENOTAZIONI ================= */
+.item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 0;
+  border-bottom:1px solid #eee;
 }
 </style>
 </head>
 
 <body style="display:none">
 
-<!-- ================= HEADER ================= -->
+<!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <img src="logo.png" alt="Logo">
+    <img src="logo.png">
     <span>GVP</span>
   </div>
   <button id="logoutBtn" class="logout-btn">Logout</button>
 </div>
 
-<!-- ================= TAB NAV ================= -->
+<!-- TAB NAV -->
 <div class="tabs">
-  <div class="tab active" id="tabPrenota">Prenotazioni</div>
+  <div class="tab active">Prenotazioni</div>
   <div class="tab" id="tabAgenda">Agenda</div>
   <div class="tab admin" id="tabDashboard">Dashboard</div>
 </div>
@@ -188,7 +192,10 @@ input,
     <input type="text" id="data" placeholder="Seleziona data" disabled>
     <input type="text" id="nomeCompleto" placeholder="Nome e Cognome" disabled>
 
-    <button id="prenotaBtn" onclick="prenota()" disabled>Prenota</button>
+    <!-- ✅ pulsante blu piccolo -->
+    <button id="prenotaBtn" class="btn-icon btn-primary" onclick="prenota()" disabled>
+      ✓
+    </button>
   </div>
 
   <!-- LE TUE PRENOTAZIONI -->
@@ -245,7 +252,7 @@ logoutBtn.onclick=()=>auth.signOut().then(()=>location="index.html");
 /* OSPEDALI */
 async function caricaOspedali(){
   ospedale.innerHTML="<option value=''>Seleziona ospedale</option>";
-  const snap = await getDocs(collection(db,"ospedali"));
+  const snap=await getDocs(collection(db,"ospedali"));
   snap.forEach(d=>{
     ospedale.innerHTML+=`<option>${d.data().nome}</option>`;
   });
@@ -259,6 +266,7 @@ async function caricaOspedali(){
 fascia.onchange=()=>{
   flatpickr("#data",{ dateFormat:"Y-m-d", minDate:"today" });
   nomeCompletoInput.disabled=false;
+  prenotaBtn.disabled=false;
 };
 
 /* PRENOTA */
@@ -273,26 +281,25 @@ window.prenota = async ()=>{
   caricaPrenotazioni();
 };
 
-/* ✅ FORMAT IDENTICO AL DASHBOARD */
+/* LISTA PRENOTAZIONI */
 async function caricaPrenotazioni(){
-  const q = query(
+  const q=query(
     collection(db,"prenotazioni"),
     where("email","==",auth.currentUser.email)
   );
-  const snap = await getDocs(q);
+  const snap=await getDocs(q);
   listaPrenotazioni.innerHTML="";
 
   snap.forEach(d=>{
-    const p = d.data();
-    const div = document.createElement("div");
+    const p=d.data();
+    const div=document.createElement("div");
     div.className="item";
     div.innerHTML=`
       <span>
         <strong>${p.nomeCompleto}</strong> – ${p.ospedale} – ${p.data}
-        <br>
-        <small style="color:#666">${p.fasciaOraria}</small>
+        <br><small style="color:#666">${p.fasciaOraria}</small>
       </span>
-      <button class="btn-delete">🗑</button>
+      <button class="btn-icon btn-danger">🗑</button>
     `;
     div.querySelector("button").onclick=async()=>{
       if(confirm("Confermi cancellazione?")){
@@ -304,5 +311,6 @@ async function caricaPrenotazioni(){
   });
 }
 </script>
+
 </body>
 </html>
