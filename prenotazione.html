@@ -15,6 +15,7 @@
   --secondary:#64b5f6;
   --danger:#e53935;
   --bg:#f5f7fb;
+  --warning:#ff9800;
 }
 
 body{
@@ -147,13 +148,21 @@ button:hover{ background:var(--primary-dark); }
   transform:scale(1.2);
 }
 
-/* ✅ FULL DATE IN CALENDAR */
+/* ✅ CALENDAR - FULL DATE */
 .flatpickr-day.full{
   background:#ffcdd2 !important;
   color:#c62828 !important;
   font-weight:bold;
   cursor:not-allowed !important;
   pointer-events:none;
+}
+
+/* ✅ CALENDAR - PARTIALLY FULL (ONE FASCIA FULL) */
+.flatpickr-day.partial{
+  background:#fff3cd !important;
+  color:#ff6f00 !important;
+  font-weight:bold;
+  border:2px solid var(--warning) !important;
 }
 </style>
 </head>
@@ -310,7 +319,7 @@ fascia.onchange=()=>{
   });
 };
 
-/* HIGHLIGHT FULL DATES IN CALENDAR */
+/* HIGHLIGHT FULL AND PARTIAL DATES IN CALENDAR */
 async function highlightFullDates(){
   if(!ospedale.value || !fascia.value) return;
   
@@ -328,10 +337,26 @@ async function highlightFullDates(){
     const countPomeridiana=await contaPrenotazioni(dateStr, "pomeridiana", ospedale.value);
     const countSerale=await contaPrenotazioni(dateStr, "serale", ospedale.value);
     
+    // Remove previous classes
+    day.classList.remove("full", "partial");
+    
+    // Check current selected fascia oraria
+    if(fascia.value==="pomeridiana"){
+      // User selecting pomeridiana - highlight if pomeridiana is full
+      if(countPomeridiana>=2){
+        day.classList.add("partial");
+      }
+    } else if(fascia.value==="serale"){
+      // User selecting serale - highlight if serale is full
+      if(countSerale>=2){
+        day.classList.add("partial");
+      }
+    }
+    
+    // If both are full, show red
     if(countPomeridiana>=2 && countSerale>=2){
+      day.classList.remove("partial");
       day.classList.add("full");
-    } else {
-      day.classList.remove("full");
     }
   }
 }
