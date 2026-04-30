@@ -8,7 +8,6 @@
 <style>
 :root{
   --primary:#2196f3;
-  --primary-dark:#1976d2;
   --secondary:#64b5f6;
   --danger:#e53935;
   --bg:#f5f7fb;
@@ -31,9 +30,8 @@ body{
 }
 
 .header-left{
-  display:flex;
-  align-items:center;
-  gap:10px;
+  font-weight:bold;
+  font-size:18px;
 }
 
 .logout-btn{
@@ -97,7 +95,6 @@ h2{
   border-radius:8px;
   padding:8px;
   font-size:13px;
-  min-height:110px;
 }
 
 .day.today{
@@ -112,10 +109,15 @@ h2{
 .event{
   background:var(--secondary);
   color:white;
-  padding:5px;
+  padding:6px;
   border-radius:6px;
   font-size:12px;
   margin-bottom:4px;
+}
+
+.event small{
+  opacity:0.9;
+  font-size:11px;
 }
 
 /* ✅ TABLET */
@@ -149,15 +151,9 @@ h2{
   }
   .day{
     font-size:14px;
-    min-height:auto;
   }
   .event{
     font-size:14px;
-  }
-
-  .calendar{
-    margin:10px;
-    padding:10px;
   }
 }
 </style>
@@ -167,9 +163,7 @@ h2{
 
 <!-- ✅ HEADER -->
 <div class="header">
-  <div class="header-left">
-    <strong>GVP</strong>
-  </div>
+  <div class="header-left">GVP</div>
   <button id="logoutBtn" class="logout-btn">Logout</button>
 </div>
 
@@ -181,7 +175,7 @@ h2{
 </div>
 
 <div class="calendar">
-  <h2>Agenda</h2>
+  <h2>Agenda – Settimana corrente + successiva</h2>
   <div class="grid" id="calendarGrid"></div>
 </div>
 
@@ -206,7 +200,7 @@ logoutBtn.onclick = () =>
 
 const grid = document.getElementById("calendarGrid");
 
-/* ✅ NOMI GIORNI */
+/* ✅ GIORNI SETTIMANA */
 ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"].forEach(d=>{
   const el=document.createElement("div");
   el.className="day-name";
@@ -216,13 +210,11 @@ const grid = document.getElementById("calendarGrid");
 
 /* ✅ CALCOLO 2 SETTIMANE */
 const today = new Date();
-
-/* Lunedì settimana corrente */
 const dow = today.getDay() === 0 ? 7 : today.getDay();
 const monday = new Date(today);
 monday.setDate(today.getDate() - dow + 1);
 
-/* 14 giorni */
+/* ✅ ARRAY 14 GIORNI */
 const days = [];
 for(let i=0;i<14;i++){
   const d = new Date(monday);
@@ -236,18 +228,22 @@ const prenotazioni = {};
 
 snap.forEach(doc=>{
   const p = doc.data();
-  if(!prenotazioni[p.data]) prenotazioni[p.data]=[];
-  prenotazioni[p.data].push(`${p.nome} (${p.fasciaOraria})`);
+  if(!prenotazioni[p.data]) prenotazioni[p.data] = [];
+  prenotazioni[p.data].push({
+    nome: p.nome,
+    cognome: p.cognome,
+    fascia: p.fasciaOraria
+  });
 });
 
-/* ✅ RENDER CALENDARIO */
+/* ✅ RENDER */
 days.forEach(date=>{
   const y = date.getFullYear();
   const m = String(date.getMonth()+1).padStart(2,"0");
   const d = String(date.getDate()).padStart(2,"0");
   const dateStr = `${y}-${m}-${d}`;
 
-  const cell = document.createElement("div");
+  const cell=document.createElement("div");
   cell.className="day";
 
   if(date.toDateString() === today.toDateString()){
@@ -261,10 +257,13 @@ days.forEach(date=>{
   `;
 
   if(prenotazioni[dateStr]){
-    prenotazioni[dateStr].forEach(ev=>{
+    prenotazioni[dateStr].forEach(p=>{
       const e=document.createElement("div");
       e.className="event";
-      e.textContent="• "+ev;
+      e.innerHTML = `
+        <strong>${p.nome} ${p.cognome}</strong><br>
+        <small>${p.fascia}</small>
+      `;
       cell.appendChild(e);
     });
   }
