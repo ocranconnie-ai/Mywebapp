@@ -12,29 +12,12 @@ body{
   margin:0;
 }
 
-/* ✅ HEADER SEMPLIFICATO */
 .header{
   background:#16a085;
   color:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
   padding:15px;
-}
-
-.header-left{
-  display:flex;
-  align-items:center;
-}
-
-.header img{
-  height:40px;
-  margin-right:10px;
-}
-
-.header span{
-  font-size:22px;
-  font-weight:bold;
+  text-align:center;
+  font-size:20px;
 }
 
 .container{
@@ -51,6 +34,7 @@ body{
   box-shadow:0 4px 10px rgba(0,0,0,0.08);
 }
 
+/* ✅ TITOLI ALLINEATI */
 .card h3{
   min-height:40px;
   display:flex;
@@ -58,6 +42,7 @@ body{
   margin:0 0 15px 0;
 }
 
+/* ✅ INPUT E BOTTONI STESSA LARGHEZZA */
 input,
 button{
   width:100%;
@@ -108,13 +93,14 @@ button{
 </head>
 
 <body style="display:none;">
-
+  
 <!-- ✅ HEADER -->
 <div class="header">
   <div class="header-left">
     <img src="logo.png" alt="Logo">
     <span>GVP</span>
   </div>
+  <button id="logoutBtn" class="logout-btn">Logout</button>
 </div>
 
 <div class="container">
@@ -154,9 +140,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "__FIREBASE_API_KEY__",
+  apiKey: "AIzaSyDZUTVFhbATsDmBP0VOr7fmfPByQGqwSIE",
   authDomain: "prenotazioni-cas.firebaseapp.com",
-  projectId: "prenotazioni-cas"
+  projectId: "prenotazioni-cas",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -195,6 +181,7 @@ document.getElementById("salvaBtn").onclick = async ()=>{
   caricaOspedali();
 };
 
+// 📋 LISTA
 async function caricaOspedali(){
   const snapshot = await getDocs(collection(db,"ospedali"));
   const lista = document.getElementById("listaOspedali");
@@ -237,6 +224,6 @@ document.getElementById("indietroBtn").onclick = ()=>{
   window.location = "prenotazione.html";
 };
 </script>
-
 </body>
 </html>
+modifichi questo perchè abbia il header con il logo e scritta GVP senza il tasto log out e la barra di navigazione
