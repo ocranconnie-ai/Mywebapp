@@ -33,19 +33,9 @@ body{
 .header-left{
   display:flex;
   align-items:center;
+  gap:10px;
 }
 
-.header img{
-  height:40px;
-  margin-right:12px;
-}
-
-.header span{
-  font-size:20px;
-  font-weight:bold;
-}
-
-/* ✅ LOGOUT */
 .logout-btn{
   background:var(--danger);
   border:none;
@@ -54,9 +44,7 @@ body{
   border-radius:6px;
   cursor:pointer;
 }
-.logout-btn:hover{
-  background:#c62828;
-}
+.logout-btn:hover{ background:#c62828; }
 
 /* ✅ TAB NAV */
 .tabs{
@@ -105,20 +93,20 @@ h2{
 }
 
 .day{
-  min-height:110px;
   border:1px solid #ddd;
   border-radius:8px;
-  padding:6px;
+  padding:8px;
   font-size:13px;
-}
-
-.day-number{
-  font-weight:bold;
-  margin-bottom:5px;
+  min-height:110px;
 }
 
 .day.today{
   border:2px solid var(--primary);
+}
+
+.day-number{
+  font-weight:bold;
+  margin-bottom:6px;
 }
 
 .event{
@@ -132,18 +120,11 @@ h2{
 
 /* ✅ TABLET */
 @media (max-width:1024px){
-  .calendar{
-    max-width:95%;
-  }
-  .day{
-    min-height:120px;
-  }
+  .calendar{ max-width:95%; }
 }
 
 /* ✅ MOBILE */
 @media (max-width:600px){
-
-  /* Header */
   .header{
     flex-direction:column;
     align-items:flex-start;
@@ -153,16 +134,13 @@ h2{
     align-self:flex-end;
   }
 
-  /* Tabs */
   .tabs{
     overflow-x:auto;
   }
   .tab{
     min-width:120px;
-    font-size:14px;
   }
 
-  /* Calendar as list */
   .grid{
     grid-template-columns:1fr;
   }
@@ -170,8 +148,8 @@ h2{
     display:none;
   }
   .day{
-    min-height:auto;
     font-size:14px;
+    min-height:auto;
   }
   .event{
     font-size:14px;
@@ -180,7 +158,6 @@ h2{
   .calendar{
     margin:10px;
     padding:10px;
-    border-radius:10px;
   }
 }
 </style>
@@ -191,8 +168,7 @@ h2{
 <!-- ✅ HEADER -->
 <div class="header">
   <div class="header-left">
-    <img src="logo.png" alt="Logo">
-    <span>GVP</span>
+    <strong>GVP</strong>
   </div>
   <button id="logoutBtn" class="logout-btn">Logout</button>
 </div>
@@ -205,7 +181,7 @@ h2{
 </div>
 
 <div class="calendar">
-  <h2>Agenda – Mese corrente</h2>
+  <h2>Agenda – Settimana corrente + successiva</h2>
   <div class="grid" id="calendarGrid"></div>
 </div>
 
@@ -215,7 +191,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-aut
 import { getFirestore, collection, getDocs }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* FIREBASE */
+/* ✅ FIREBASE */
 const app = initializeApp({
   apiKey:"__FIREBASE_API_KEY__",
   authDomain:"prenotazioni-cas.firebaseapp.com",
@@ -224,13 +200,13 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* LOGOUT */
+/* ✅ LOGOUT */
 logoutBtn.onclick = () =>
   auth.signOut().then(() => location="index.html");
 
 const grid = document.getElementById("calendarGrid");
 
-/* Giorni settimana */
+/* ✅ NOMI GIORNI */
 ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"].forEach(d=>{
   const el=document.createElement("div");
   el.className="day-name";
@@ -238,40 +214,51 @@ const grid = document.getElementById("calendarGrid");
   grid.appendChild(el);
 });
 
-/* Data */
-const now=new Date();
-const year=now.getFullYear();
-const month=now.getMonth();
-const today=now.getDate();
+/* ✅ CALCOLO 2 SETTIMANE */
+const today = new Date();
 
-const firstDay=new Date(year,month,1);
-const daysInMonth=new Date(year,month+1,0).getDate();
-let startDay=firstDay.getDay();
-startDay=startDay===0?6:startDay-1;
+/* Lunedì settimana corrente */
+const dow = today.getDay() === 0 ? 7 : today.getDay();
+const monday = new Date(today);
+monday.setDate(today.getDate() - dow + 1);
 
-/* Celle vuote */
-for(let i=0;i<startDay;i++){
-  grid.appendChild(document.createElement("div"));
+/* 14 giorni */
+const days = [];
+for(let i=0;i<14;i++){
+  const d = new Date(monday);
+  d.setDate(monday.getDate() + i);
+  days.push(d);
 }
 
-/* Prenotazioni */
-const snap=await getDocs(collection(db,"prenotazioni"));
-const prenotazioni={};
+/* ✅ PRENOTAZIONI */
+const snap = await getDocs(collection(db,"prenotazioni"));
+const prenotazioni = {};
 
-snap.forEach(d=>{
-  const p=d.data();
+snap.forEach(doc=>{
+  const p = doc.data();
   if(!prenotazioni[p.data]) prenotazioni[p.data]=[];
   prenotazioni[p.data].push(`${p.nome} (${p.fasciaOraria})`);
 });
 
-/* Giorni */
-for(let day=1;day<=daysInMonth;day++){
-  const dateStr=`${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-  const cell=document.createElement("div");
-  cell.className="day";
-  if(day===today) cell.classList.add("today");
+/* ✅ RENDER CALENDARIO */
+days.forEach(date=>{
+  const y = date.getFullYear();
+  const m = String(date.getMonth()+1).padStart(2,"0");
+  const d = String(date.getDate()).padStart(2,"0");
+  const dateStr = `${y}-${m}-${d}`;
 
-  cell.innerHTML=`<div class="day-number">${day}</div>`;
+  const cell = document.createElement("div");
+  cell.className="day";
+
+  if(date.toDateString() === today.toDateString()){
+    cell.classList.add("today");
+  }
+
+  cell.innerHTML = `
+    <div class="day-number">
+      ${date.toLocaleDateString("it-IT",{ weekday:"short", day:"2-digit", month:"2-digit" })}
+    </div>
+  `;
 
   if(prenotazioni[dateStr]){
     prenotazioni[dateStr].forEach(ev=>{
@@ -281,8 +268,9 @@ for(let day=1;day<=daysInMonth;day++){
       cell.appendChild(e);
     });
   }
+
   grid.appendChild(cell);
-}
+});
 </script>
 
 </body>
