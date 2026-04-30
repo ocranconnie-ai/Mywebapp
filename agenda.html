@@ -8,43 +8,54 @@
 <style>
 :root{
   --primary:#2196f3;
+  --primary-dark:#1976d2;
   --secondary:#64b5f6;
   --danger:#e53935;
   --bg:#f5f7fb;
 }
 
 body{
-  font-family:Arial, sans-serif;
+  font-family:Arial;
   background:var(--bg);
   margin:0;
 }
 
-/* ✅ HEADER */
+/* ✅ HEADER (IDENTICO A prenotazione.html) */
 .header{
   background:var(--primary);
   color:white;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:12px 16px;
+  padding:10px 16px;
 }
-
 .header-left{
+  display:flex;
+  align-items:center;
+}
+.header img{
+  height:42px;
+  margin-right:12px;
+}
+.header span{
+  font-size:20px;
   font-weight:bold;
-  font-size:18px;
 }
 
 .logout-btn{
   background:var(--danger);
   border:none;
   color:white;
-  padding:6px 14px;
+  padding:6px 12px;
   border-radius:6px;
   cursor:pointer;
+  font-size:14px;
 }
-.logout-btn:hover{ background:#c62828; }
+.logout-btn:hover{
+  background:#c62828;
+}
 
-/* ✅ TAB NAV */
+/* ✅ TAB BAR (identica) */
 .tabs{
   display:flex;
   background:white;
@@ -53,7 +64,7 @@ body{
 .tab{
   flex:1;
   text-align:center;
-  padding:14px;
+  padding:12px;
   cursor:pointer;
   font-weight:bold;
   color:#555;
@@ -80,7 +91,7 @@ h2{
 
 .grid{
   display:grid;
-  grid-template-columns:repeat(7, 1fr);
+  grid-template-columns:repeat(7,1fr);
   gap:6px;
 }
 
@@ -115,16 +126,6 @@ h2{
   margin-bottom:4px;
 }
 
-.event small{
-  opacity:0.9;
-  font-size:11px;
-}
-
-/* ✅ TABLET */
-@media (max-width:1024px){
-  .calendar{ max-width:95%; }
-}
-
 /* ✅ MOBILE */
 @media (max-width:600px){
   .header{
@@ -135,14 +136,6 @@ h2{
   .logout-btn{
     align-self:flex-end;
   }
-
-  .tabs{
-    overflow-x:auto;
-  }
-  .tab{
-    min-width:120px;
-  }
-
   .grid{
     grid-template-columns:1fr;
   }
@@ -150,9 +143,6 @@ h2{
     display:none;
   }
   .day{
-    font-size:14px;
-  }
-  .event{
     font-size:14px;
   }
 }
@@ -212,50 +202,48 @@ const grid = document.getElementById("calendarGrid");
 });
 
 /* ✅ CALCOLO 2 SETTIMANE */
-const today = new Date();
-const dow = today.getDay() === 0 ? 7 : today.getDay();
-const monday = new Date(today);
-monday.setDate(today.getDate() - dow + 1);
+const today=new Date();
+const dow=today.getDay()===0?7:today.getDay();
+const monday=new Date(today);
+monday.setDate(today.getDate()-dow+1);
 
-/* ✅ ARRAY 14 GIORNI */
-const days = [];
+const days=[];
 for(let i=0;i<14;i++){
-  const d = new Date(monday);
-  d.setDate(monday.getDate() + i);
+  const d=new Date(monday);
+  d.setDate(monday.getDate()+i);
   days.push(d);
 }
 
-/* ✅ PRENOTAZIONI */
-const snap = await getDocs(collection(db,"prenotazioni"));
-const prenotazioni = {};
+/* ✅ PRENOTAZIONI (USA nomeCompleto) */
+const snap=await getDocs(collection(db,"prenotazioni"));
+const prenotazioni={};
 
 snap.forEach(doc=>{
-  const p = doc.data();
-  if(!prenotazioni[p.data]) prenotazioni[p.data] = [];
+  const p=doc.data();
+  if(!prenotazioni[p.data]) prenotazioni[p.data]=[];
   prenotazioni[p.data].push({
-    nome: p.nome,
-    cognome: p.cognome,
+    nomeCompleto: p.nomeCompleto,
     fascia: p.fasciaOraria
   });
 });
 
 /* ✅ RENDER */
 days.forEach(date=>{
-  const y = date.getFullYear();
-  const m = String(date.getMonth()+1).padStart(2,"0");
-  const d = String(date.getDate()).padStart(2,"0");
-  const dateStr = `${y}-${m}-${d}`;
+  const y=date.getFullYear();
+  const m=String(date.getMonth()+1).padStart(2,"0");
+  const d=String(date.getDate()).padStart(2,"0");
+  const dateStr=`${y}-${m}-${d}`;
 
   const cell=document.createElement("div");
   cell.className="day";
 
-  if(date.toDateString() === today.toDateString()){
+  if(date.toDateString()===today.toDateString()){
     cell.classList.add("today");
   }
 
-  cell.innerHTML = `
+  cell.innerHTML=`
     <div class="day-number">
-      ${date.toLocaleDateString("it-IT",{ weekday:"short", day:"2-digit", month:"2-digit" })}
+      ${date.toLocaleDateString("it-IT",{weekday:"short",day:"2-digit",month:"2-digit"})}
     </div>
   `;
 
@@ -263,10 +251,7 @@ days.forEach(date=>{
     prenotazioni[dateStr].forEach(p=>{
       const e=document.createElement("div");
       e.className="event";
-      e.innerHTML = `
-        <strong>${p.nome} ${p.cognome}</strong><br>
-        <small>${p.fascia}</small>
-      `;
+      e.innerHTML=`${p.nomeCompleto}<br><small>${p.fascia}</small>`;
       cell.appendChild(e);
     });
   }
