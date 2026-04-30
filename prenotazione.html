@@ -147,18 +147,13 @@ button:hover{ background:var(--primary-dark); }
   transform:scale(1.2);
 }
 
-/* ✅ DISABLED DATE IN CALENDAR */
-.flatpickr-day.disabled{
-  color:#ccc !important;
-  background:#f5f5f5 !important;
-  cursor:not-allowed !important;
-  text-decoration:line-through;
-}
-
+/* ✅ FULL DATE IN CALENDAR */
 .flatpickr-day.full{
   background:#ffcdd2 !important;
   color:#c62828 !important;
   font-weight:bold;
+  cursor:not-allowed !important;
+  pointer-events:none;
 }
 </style>
 </head>
@@ -294,7 +289,7 @@ async function contaPrenotazioni(data, fasciaOraria, ospedaleNome){
 }
 
 /* CALENDARIO */
-fascia.onchange=async()=>{
+fascia.onchange=()=>{
   if(flatpickrInstance) flatpickrInstance.destroy();
   
   const today=new Date();
@@ -305,47 +300,38 @@ fascia.onchange=async()=>{
     dateFormat:"Y-m-d",
     minDate:"today",
     maxDate:maxDate,
-    disable:[
-      async(date)=>{
-        if(!ospedale.value) return false;
-        const dateStr=date.toISOString().split('T')[0];
-        const count=await contaPrenotazioni(dateStr, fascia.value, ospedale.value);
-        return count>=2;
-      }
-    ],
-    onReady:(selectedDates, dateStr, instance)=>{
-      highlightFullDates(instance);
-    },
-    onChange:(selectedDates, dateStr, instance)=>{
+    onChange:()=>{
       nomeCompletoInput.disabled=false;
       checkFormComplete();
-      highlightFullDates(instance);
+    },
+    onReady:()=>{
+      highlightFullDates();
     }
   });
 };
 
 /* HIGHLIGHT FULL DATES IN CALENDAR */
-async function highlightFullDates(instance){
-  if(!ospedale.value) return;
-  const today=new Date();
-  const maxDate=new Date();
-  maxDate.setDate(maxDate.getDate()+7);
+async function highlightFullDates(){
+  if(!ospedale.value || !fascia.value) return;
   
   const days=document.querySelectorAll(".flatpickr-day");
   for(let day of days){
-    const dateStr=day.getAttribute("aria-label");
-    if(!dateStr) continue;
+    if(day.classList.contains("prevMonthDay") || day.classList.contains("nextMonthDay")) continue;
     
-    const dateObj=new Date(dateStr);
-    if(dateObj<today || dateObj>maxDate) continue;
+    const dateNum=day.textContent.trim();
+    if(!dateNum || dateNum==="") continue;
     
-    const dateFormatted=dateObj.toISOString().split('T')[0];
+    const currentMonth=flatpickrInstance.currentMonth;
+    const currentYear=flatpickrInstance.currentYear;
+    const dateStr=`${currentYear}-${String(currentMonth+1).padStart(2,"0")}-${String(dateNum).padStart(2,"0")}`;
     
-    const countPomeridiana=await contaPrenotazioni(dateFormatted, "pomeridiana", ospedale.value);
-    const countSerale=await contaPrenotazioni(dateFormatted, "serale", ospedale.value);
+    const countPomeridiana=await contaPrenotazioni(dateStr, "pomeridiana", ospedale.value);
+    const countSerale=await contaPrenotazioni(dateStr, "serale", ospedale.value);
     
     if(countPomeridiana>=2 && countSerale>=2){
       day.classList.add("full");
+    } else {
+      day.classList.remove("full");
     }
   }
 }
@@ -377,8 +363,7 @@ window.prenota=async()=>{
     email:user.email
   });
   caricaPrenotazioni();
-  if(flatpickrInstance) flatpickrInstance.redraw();
-  highlightFullDates(flatpickrInstance);
+  highlightFullDates();
   ospedale.value="";
   fascia.value="";
   dataInput.value="";
@@ -413,8 +398,7 @@ window.elimina=async id=>{
   if(!confirm("Confermi cancellazione?")) return;
   await deleteDoc(doc(db,"prenotazioni",id));
   caricaPrenotazioni();
-  if(flatpickrInstance) flatpickrInstance.redraw();
-  highlightFullDates(flatpickrInstance);
+  highlightFullDates();
 };
 </script>
 
