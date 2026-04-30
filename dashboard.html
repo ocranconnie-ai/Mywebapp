@@ -14,39 +14,27 @@
   --danger:#e53935;
   --bg:#f5f7fb;
 }
-
 body{
   font-family:Arial;
   background:var(--bg);
   margin:0;
 }
-
-/* ✅ HEADER */
 .header{
   background:var(--primary);
   color:white;
   display:flex;
-  align-items:center;
   justify-content:space-between;
+  align-items:center;
   padding:12px 16px;
 }
-
 .header-left{
   display:flex;
   align-items:center;
 }
-
 .header img{
   height:40px;
   margin-right:12px;
 }
-
-.header span{
-  font-size:20px;
-  font-weight:bold;
-}
-
-/* ✅ LOGOUT ROSSO */
 .logout-btn{
   background:var(--danger);
   border:none;
@@ -54,13 +42,7 @@ body{
   padding:6px 12px;
   border-radius:6px;
   cursor:pointer;
-  font-size:14px;
 }
-.logout-btn:hover{
-  background:#c62828;
-}
-
-/* ✅ TAB BAR */
 .tabs{
   display:flex;
   background:white;
@@ -78,79 +60,61 @@ body{
   color:var(--primary);
   border-bottom:3px solid var(--primary);
 }
-
-/* LAYOUT */
 .container{
   max-width:1200px;
   margin:auto;
   padding:20px;
 }
-
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
   gap:20px;
 }
-
 .card{
   background:white;
   border-radius:15px;
   padding:15px;
   box-shadow:0 4px 10px rgba(0,0,0,.08);
 }
-
 .card-header{
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
-
 .item{
   border-bottom:1px solid #eee;
   padding:8px 0;
 }
-
-/* BOTTONI */
 button{
   padding:6px 12px;
   border:none;
   border-radius:6px;
   cursor:pointer;
-  font-size:14px;
 }
-
 .primary-btn{
   background:var(--primary);
   color:white;
 }
-.primary-btn:hover{ background:var(--primary-dark); }
-
 .edit-btn{
   background:var(--warning);
 }
-.edit-btn:hover{ background:#f9a825; }
-
 .delete-btn{
   background:var(--danger);
   color:white;
 }
-.delete-btn:hover{ background:#c62828; }
 </style>
 </head>
 
 <body style="display:none">
 
-<!-- ✅ HEADER -->
 <div class="header">
   <div class="header-left">
-    <img src="logo.png" alt="Logo">
+    <img src="logo.png">
     <span>GVP</span>
   </div>
-
   <button id="logoutBtn" class="logout-btn">Logout</button>
 </div>
 
-<!-- ✅ TAB NAV -->
 <div class="tabs">
   <div class="tab" onclick="location='prenotazione.html'">Prenotazioni</div>
   <div class="tab" onclick="location='agenda.html'">Agenda</div>
@@ -158,17 +122,17 @@ button{
 </div>
 
 <div class="container">
-
   <div class="grid">
 
+    <!-- PRENOTAZIONI -->
     <div class="card">
       <div class="card-header">
         <h3>Prenotazioni</h3>
-        <button id="btnNuovaPren" class="primary-btn">➕ Nuova</button>
       </div>
       <div id="listaPrenotazioni"></div>
     </div>
 
+    <!-- PAZIENTI -->
     <div class="card">
       <div class="card-header">
         <h3>Pazienti</h3>
@@ -177,6 +141,7 @@ button{
       <div id="listaPazienti"></div>
     </div>
 
+    <!-- OSPEDALI -->
     <div class="card">
       <div class="card-header">
         <h3>Ospedali</h3>
@@ -190,23 +155,20 @@ button{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  getFirestore, collection, getDocs,
-  deleteDoc, updateDoc, doc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, getDocs, deleteDoc, updateDoc, doc } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "__FIREBASE_API_KEY__",
   authDomain:"prenotazioni-cas.firebaseapp.com",
   projectId:"prenotazioni-cas"
 });
+
 const auth = getAuth(app);
 const db = getFirestore(app);
-const adminEmail = "admin@admin.com";
+const adminEmail="admin@admin.com";
 
-/* AUTH */
 onAuthStateChanged(auth, user=>{
   if(!user || user.email!==adminEmail){
     location="index.html";
@@ -218,11 +180,7 @@ onAuthStateChanged(auth, user=>{
   caricaOspedali();
 });
 
-/* LOGOUT */
 logoutBtn.onclick=()=>auth.signOut().then(()=>location="index.html");
-
-/* NAV */
-btnNuovaPren.onclick=()=>location="prenotazione.html";
 btnNuovoPaz.onclick=()=>location="aggiungiPaziente.html";
 btnNuovoOsp.onclick=()=>location="aggiungiOspedale.html";
 
@@ -234,8 +192,10 @@ async function caricaPrenotazioni(){
     const p=d.data();
     const row=document.createElement("div");
     row.className="item";
-    row.innerHTML=`${p.nome} – ${p.ospedale} – ${p.data}
-      <button class="delete-btn">X</button>`;
+    row.innerHTML=`
+      <strong>${p.nomeCompleto}</strong> – ${p.ospedale} – ${p.data}
+      <button class="delete-btn">X</button>
+    `;
     row.querySelector("button").onclick=async()=>{
       if(confirm("Eliminare prenotazione?")){
         await deleteDoc(doc(db,"prenotazioni",d.id));
@@ -253,9 +213,11 @@ async function caricaPazienti(){
   snap.forEach(d=>{
     const row=document.createElement("div");
     row.className="item";
-    row.innerHTML=`${d.data().nome}
+    row.innerHTML=`
+      ${d.data().nome}
       <button class="edit-btn">✏</button>
-      <button class="delete-btn">X</button>`;
+      <button class="delete-btn">X</button>
+    `;
     row.querySelector(".edit-btn").onclick=async()=>{
       const nuovo=prompt("Nuovo nome",d.data().nome);
       if(nuovo){
@@ -280,9 +242,11 @@ async function caricaOspedali(){
   snap.forEach(d=>{
     const row=document.createElement("div");
     row.className="item";
-    row.innerHTML=`${d.data().nome}
+    row.innerHTML=`
+      ${d.data().nome}
       <button class="edit-btn">✏</button>
-      <button class="delete-btn">X</button>`;
+      <button class="delete-btn">X</button>
+    `;
     row.querySelector(".edit-btn").onclick=async()=>{
       const nuovo=prompt("Nuovo nome",d.data().nome);
       if(nuovo){
@@ -300,6 +264,5 @@ async function caricaOspedali(){
   });
 }
 </script>
-
 </body>
 </html>
