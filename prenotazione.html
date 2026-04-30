@@ -118,15 +118,47 @@ button{
 }
 button:hover{ background:var(--primary-dark); }
 
-.delete-btn{
-  background:var(--danger);
-  padding:6px 10px;
-}
-.delete-btn:hover{ background:#c62828; }
-
 .item{
   border-bottom:1px solid #eee;
   padding:10px 0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.item-info{
+  flex:1;
+}
+
+/* ✅ DELETE BUTTON - PROFESSIONAL */
+.delete-btn{
+  background:transparent;
+  border:none;
+  color:var(--danger);
+  font-size:20px;
+  cursor:pointer;
+  padding:0;
+  margin-left:10px;
+  transition:all 0.2s ease;
+  font-weight:bold;
+}
+.delete-btn:hover{
+  color:#c62828;
+  transform:scale(1.2);
+}
+
+/* ✅ DISABLED DATE IN CALENDAR */
+.flatpickr-day.disabled{
+  color:#ccc !important;
+  background:#f5f5f5 !important;
+  cursor:not-allowed !important;
+  text-decoration:line-through;
+}
+
+.flatpickr-day.full{
+  background:#ffcdd2 !important;
+  color:#c62828 !important;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -249,8 +281,20 @@ async function caricaOspedali(){
   };
 }
 
+/* COUNT BOOKINGS FOR DATE/FASCIA/OSPEDALE */
+async function contaPrenotazioni(data, fasciaOraria, ospedaleNome){
+  const q=query(
+    collection(db,"prenotazioni"),
+    where("data","==",data),
+    where("fasciaOraria","==",fasciaOraria),
+    where("ospedale","==",ospedaleNome)
+  );
+  const snap=await getDocs(q);
+  return snap.size;
+}
+
 /* CALENDARIO */
-fascia.onchange=()=>{
+fascia.onchange=async()=>{
   if(flatpickrInstance) flatpickrInstance.destroy();
   
   const today=new Date();
@@ -261,12 +305,50 @@ fascia.onchange=()=>{
     dateFormat:"Y-m-d",
     minDate:"today",
     maxDate:maxDate,
-    onChange:()=>{
+    disable:[
+      async(date)=>{
+        if(!ospedale.value) return false;
+        const dateStr=date.toISOString().split('T')[0];
+        const count=await contaPrenotazioni(dateStr, fascia.value, ospedale.value);
+        return count>=2;
+      }
+    ],
+    onReady:(selectedDates, dateStr, instance)=>{
+      highlightFullDates(instance);
+    },
+    onChange:(selectedDates, dateStr, instance)=>{
       nomeCompletoInput.disabled=false;
       checkFormComplete();
+      highlightFullDates(instance);
     }
   });
 };
+
+/* HIGHLIGHT FULL DATES IN CALENDAR */
+async function highlightFullDates(instance){
+  if(!ospedale.value) return;
+  const today=new Date();
+  const maxDate=new Date();
+  maxDate.setDate(maxDate.getDate()+7);
+  
+  const days=document.querySelectorAll(".flatpickr-day");
+  for(let day of days){
+    const dateStr=day.getAttribute("aria-label");
+    if(!dateStr) continue;
+    
+    const dateObj=new Date(dateStr);
+    if(dateObj<today || dateObj>maxDate) continue;
+    
+    const dateFormatted=dateObj.toISOString().split('T')[0];
+    
+    const countPomeridiana=await contaPrenotazioni(dateFormatted, "pomeridiana", ospedale.value);
+    const countSerale=await contaPrenotazioni(dateFormatted, "serale", ospedale.value);
+    
+    if(countPomeridiana>=2 && countSerale>=2){
+      day.classList.add("full");
+    }
+  }
+}
 
 /* CHECK FORM COMPLETENESS */
 function checkFormComplete(){
@@ -280,6 +362,13 @@ nomeCompletoInput.addEventListener("input", checkFormComplete);
 /* PRENOTA */
 window.prenota=async()=>{
   const user=auth.currentUser;
+  const count=await contaPrenotazioni(dataInput.value, fascia.value, ospedale.value);
+  
+  if(count>=2){
+    alert("Questa fascia oraria è piena!");
+    return;
+  }
+  
   await addDoc(collection(db,"prenotazioni"),{
     ospedale:ospedale.value,
     fasciaOraria:fascia.value,
@@ -288,6 +377,8 @@ window.prenota=async()=>{
     email:user.email
   });
   caricaPrenotazioni();
+  if(flatpickrInstance) flatpickrInstance.redraw();
+  highlightFullDates(flatpickrInstance);
   ospedale.value="";
   fascia.value="";
   dataInput.value="";
@@ -310,8 +401,10 @@ async function caricaPrenotazioni(){
     const p=d.data();
     listaPrenotazioni.innerHTML+=`
       <div class="item">
-        ${p.ospedale} – ${p.data} – ${p.fasciaOraria} – ${p.nomeCompleto}
-        <button class="delete-btn" onclick="elimina('${d.id}')">X</button>
+        <div class="item-info">
+          ${p.ospedale} – ${p.data} – ${p.fasciaOraria} – ${p.nomeCompleto}
+        </div>
+        <button class="delete-btn" onclick="elimina('${d.id}')" title="Elimina prenotazione">×</button>
       </div>`;
   });
 }
@@ -320,6 +413,8 @@ window.elimina=async id=>{
   if(!confirm("Confermi cancellazione?")) return;
   await deleteDoc(doc(db,"prenotazioni",id));
   caricaPrenotazioni();
+  if(flatpickrInstance) flatpickrInstance.redraw();
+  highlightFullDates(flatpickrInstance);
 };
 </script>
 
