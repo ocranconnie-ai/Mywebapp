@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,28 +33,32 @@ body{
   margin-bottom:20px;
   box-shadow:0 4px 10px rgba(0,0,0,0.08);
 }
-  
-.card h3 {
-  min-height: 40px;          /* stessa altezza per tutti i titoli */
-  display: flex;
-  align-items: center;       /* centrato verticalmente */
-  margin-top: 0;
-  margin-bottom: 15px;
+
+/* ✅ TITOLI ALLINEATI */
+.card h3{
+  min-height:40px;
+  display:flex;
+  align-items:center;
+  margin:0 0 15px 0;
+}
+
+/* ✅ INPUT E BOTTONI STESSA LARGHEZZA */
+input,
+button{
+  width:100%;
+  box-sizing:border-box;
+  padding:10px;
+  border-radius:8px;
+  font-size:15px;
 }
 
 input{
-  width:100%;
-  padding:10px;
   margin:10px 0;
-  border-radius:8px;
   border:1px solid #ddd;
 }
 
 button{
-  width:100%;
-  padding:10px;
   border:none;
-  border-radius:8px;
   cursor:pointer;
   margin-top:10px;
 }
@@ -90,7 +93,6 @@ button{
 </head>
 
 <body style="display:none;">
-
 <div class="header">Gestione Ospedali</div>
 
 <div class="container">
@@ -98,10 +100,8 @@ button{
   <!-- ➕ AGGIUNGI -->
   <div class="card">
     <h3>Aggiungi ospedale</h3>
-
     <input type="text" id="nome" placeholder="Nome ospedale">
     <input type="text" id="indirizzo" placeholder="Indirizzo">
-
     <button id="salvaBtn">Salva</button>
   </div>
 
@@ -113,7 +113,6 @@ button{
 
   <!-- 🔙 -->
   <button id="indietroBtn">Torna indietro</button>
-
 </div>
 
 <script type="module">
@@ -127,15 +126,13 @@ import {
   doc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
 import {
   getAuth,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// CONFIG
 const firebaseConfig = {
-  apiKey: "__FIREBASE_API_KEY__",
+  apiKey: "AIzaSyDZUTVFhbATsDmBP0VOr7fmfPByQGqwSIE",
   authDomain: "prenotazioni-cas.firebaseapp.com",
   projectId: "prenotazioni-cas",
 };
@@ -146,28 +143,21 @@ const auth = getAuth(app);
 
 const adminEmail = "admin@admin.com";
 
-// 🔐 CONTROLLO ACCESSO
 onAuthStateChanged(auth, (user)=>{
-
   if(!user){
     window.location = "index.html";
     return;
   }
-
   if(user.email !== adminEmail){
     alert("Non autorizzato");
     window.location = "prenotazione.html";
     return;
   }
-
   document.body.style.display = "block";
-
   caricaOspedali();
 });
 
-// ➕ AGGIUNGI OSPEDALE
 document.getElementById("salvaBtn").onclick = async ()=>{
-
   const nome = document.getElementById("nome").value.trim();
   const indirizzo = document.getElementById("indirizzo").value.trim();
 
@@ -176,57 +166,36 @@ document.getElementById("salvaBtn").onclick = async ()=>{
     return;
   }
 
-  await addDoc(collection(db,"ospedali"),{
-    nome,
-    indirizzo
-  });
-
-  alert("Ospedale aggiunto!");
+  await addDoc(collection(db,"ospedali"),{ nome, indirizzo });
 
   document.getElementById("nome").value = "";
   document.getElementById("indirizzo").value = "";
-
   caricaOspedali();
 };
 
-// 📋 CARICA LISTA
+// 📋 LISTA
 async function caricaOspedali(){
-
   const snapshot = await getDocs(collection(db,"ospedali"));
   const lista = document.getElementById("listaOspedali");
-
   lista.innerHTML = "";
 
   snapshot.forEach(docSnap=>{
-
     const d = docSnap.data();
-
     const div = document.createElement("div");
     div.className = "item";
-
     div.innerHTML = `
       <strong>${d.nome}</strong><br>
       ${d.indirizzo}<br>
-
-      <button class="edit-btn" onclick="modifica('${docSnap.id}','${d.nome}','${d.indirizzo}')">
-        Modifica
-      </button>
-
-      <button class="delete-btn" onclick="elimina('${docSnap.id}')">
-        Elimina
-      </button>
+      <button class="edit-btn" onclick="modifica('${docSnap.id}','${d.nome}','${d.indirizzo}')">Modifica</button>
+      <button class="delete-btn" onclick="elimina('${docSnap.id}')">Elimina</button>
     `;
-
     lista.appendChild(div);
   });
 }
 
-// ✏️ MODIFICA
 window.modifica = async function(id,nome,indirizzo){
-
   const nuovoNome = prompt("Nuovo nome", nome);
   const nuovoIndirizzo = prompt("Nuovo indirizzo", indirizzo);
-
   if(!nuovoNome || !nuovoIndirizzo) return;
 
   await updateDoc(doc(db,"ospedali",id),{
@@ -234,29 +203,18 @@ window.modifica = async function(id,nome,indirizzo){
     indirizzo: nuovoIndirizzo
   });
 
-  alert("Modificato!");
-
   caricaOspedali();
 };
 
-// ❌ ELIMINA
 window.elimina = async function(id){
-
   if(!confirm("Eliminare ospedale?")) return;
-
   await deleteDoc(doc(db,"ospedali",id));
-
-  alert("Eliminato!");
-
   caricaOspedali();
 };
 
-// 🔙 TORNA
 document.getElementById("indietroBtn").onclick = ()=>{
   window.location = "prenotazione.html";
 };
-
 </script>
-
 </body>
 </html>
