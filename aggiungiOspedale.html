@@ -7,54 +7,20 @@
 <title>Gestione Ospedali</title>
 
 <style>
-:root{
-  --primary:#2196f3;
-  --danger:#e53935;
-}
-
 body{
   font-family: Arial;
   background:#f5f7fb;
   margin:0;
 }
 
-/* ✅ HEADER CON LOGO */
 .header{
-  background:var(--primary);
+  background:#16a085;
   color:white;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:12px 16px;
-}
-
-.header-left{
-  display:flex;
-  align-items:center;
-}
-
-.header img{
-  height:40px;
-  margin-right:12px;
-}
-
-.header span{
+  padding:15px;
+  text-align:center;
   font-size:20px;
-  font-weight:bold;
 }
 
-/* ✅ PULSANTE INDIETRO */
-.back-btn{
-  background:var(--danger);
-  border:none;
-  color:white;
-  padding:6px 12px;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:14px;
-}
-
-/* ✅ CONTENUTO */
 .container{
   max-width:500px;
   margin:auto;
@@ -117,22 +83,17 @@ button{
 
 <body style="display:none;">
 
-<!-- ✅ HEADER -->
-<div class="header">
-  <div class="header-left">
-    <img src="logo.png" alt="Logo">
-    <span>Gestione Ospedali</span>
-  </div>
-  <button class="back-btn" onclick="location='dashboard.html'">Indietro</button>
-</div>
+<div class="header">Gestione Ospedali</div>
 
 <div class="container">
 
   <!-- ➕ AGGIUNGI -->
   <div class="card">
     <h3>Aggiungi ospedale</h3>
+
     <input type="text" id="nome" placeholder="Nome ospedale">
     <input type="text" id="indirizzo" placeholder="Indirizzo">
+
     <button id="salvaBtn">Salva</button>
   </div>
 
@@ -142,7 +103,7 @@ button{
     <div id="listaOspedali"></div>
   </div>
 
-  <!-- 🔙 TORNA -->
+  <!-- 🔙 -->
   <button id="indietroBtn">Torna indietro</button>
 
 </div>
@@ -166,7 +127,7 @@ import {
 
 // CONFIG
 const firebaseConfig = {
-  apiKey: "__FIREBASE_API_KEY__",
+  apiKey: "AIzaSyDZUTVFhbATsDmBP0VOr7fmfPByQGqwSIE",
   authDomain: "prenotazioni-cas.firebaseapp.com",
   projectId: "prenotazioni-cas",
 };
@@ -192,11 +153,12 @@ onAuthStateChanged(auth, (user)=>{
   }
 
   document.body.style.display = "block";
+
   caricaOspedali();
 });
 
 // ➕ AGGIUNGI OSPEDALE
-salvaBtn.onclick = async ()=>{
+document.getElementById("salvaBtn").onclick = async ()=>{
 
   const nome = document.getElementById("nome").value.trim();
   const indirizzo = document.getElementById("indirizzo").value.trim();
@@ -206,7 +168,12 @@ salvaBtn.onclick = async ()=>{
     return;
   }
 
-  await addDoc(collection(db,"ospedali"),{ nome, indirizzo });
+  await addDoc(collection(db,"ospedali"),{
+    nome,
+    indirizzo
+  });
+
+  alert("Ospedale aggiunto!");
 
   document.getElementById("nome").value = "";
   document.getElementById("indirizzo").value = "";
@@ -216,47 +183,71 @@ salvaBtn.onclick = async ()=>{
 
 // 📋 CARICA LISTA
 async function caricaOspedali(){
+
   const snapshot = await getDocs(collection(db,"ospedali"));
-  listaOspedali.innerHTML = "";
+  const lista = document.getElementById("listaOspedali");
+
+  lista.innerHTML = "";
 
   snapshot.forEach(docSnap=>{
+
     const d = docSnap.data();
+
     const div = document.createElement("div");
     div.className = "item";
+
     div.innerHTML = `
       <strong>${d.nome}</strong><br>
       ${d.indirizzo}<br>
-      <button class="edit-btn" onclick="modifica('${docSnap.id}','${d.nome}','${d.indirizzo}')">Modifica</button>
-      <button class="delete-btn" onclick="elimina('${docSnap.id}')">Elimina</button>
+
+      <button class="edit-btn" onclick="modifica('${docSnap.id}','${d.nome}','${d.indirizzo}')">
+        Modifica
+      </button>
+
+      <button class="delete-btn" onclick="elimina('${docSnap.id}')">
+        Elimina
+      </button>
     `;
-    listaOspedali.appendChild(div);
+
+    lista.appendChild(div);
   });
 }
 
 // ✏️ MODIFICA
 window.modifica = async function(id,nome,indirizzo){
+
   const nuovoNome = prompt("Nuovo nome", nome);
   const nuovoIndirizzo = prompt("Nuovo indirizzo", indirizzo);
+
   if(!nuovoNome || !nuovoIndirizzo) return;
 
   await updateDoc(doc(db,"ospedali",id),{
     nome: nuovoNome,
     indirizzo: nuovoIndirizzo
   });
+
+  alert("Modificato!");
+
   caricaOspedali();
 };
 
 // ❌ ELIMINA
 window.elimina = async function(id){
+
   if(!confirm("Eliminare ospedale?")) return;
+
   await deleteDoc(doc(db,"ospedali",id));
+
+  alert("Eliminato!");
+
   caricaOspedali();
 };
 
-// 🔙 TORNA (pulsante sotto)
-indietroBtn.onclick = () =>{
+// 🔙 TORNA
+document.getElementById("indietroBtn").onclick = ()=>{
   window.location = "prenotazione.html";
 };
+
 </script>
 
 </body>
