@@ -1,150 +1,180 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aggiungi Paziente</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aggiungi Paziente</title>
 
-<style>
-body{
-  font-family: Arial;
-  background:#f5f7fb;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-  margin:0;
-}
-.card{
-  background:white;
-  padding:30px;
-  border-radius:15px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.1);
-  width:350px;
-}
-h2{text-align:center;margin-bottom:20px}
-input, select{
-  width:100%;
-  padding:10px;
-  margin:10px 0;
-  border-radius:8px;
-  border:1px solid #ddd;
-}
-button{
-  width:100%;
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  background:#3498db;
-  color:white;
-  cursor:pointer;
-}
-button:hover{background:#2980b9}
-#indietroBtn{
-  background:#e74c3c;
-  margin-top:10px;
-}
-</style>
+  <style>
+    body{
+      font-family: Arial;
+      background:#f5f7fb;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      margin:0;
+    }
+
+    .card{
+      background:white;
+      padding:30px;
+      border-radius:15px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.1);
+      width:350px;
+    }
+
+    h2{
+      text-align:center;
+      margin-bottom:20px;
+    }
+
+    /* ✅ INPUT E SELECT PERFETTAMENTE ALLINEATI */
+    input, select{
+      width:100%;
+      height:44px;
+      padding:10px 12px;
+      margin:10px 0;
+      border-radius:8px;
+      border:1px solid #ddd;
+      font-size:14px;
+      box-sizing:border-box;
+
+      /* uniforma select agli input */
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      background-color:white;
+    }
+
+    /* freccia custom del select */
+    select{
+      background-image:url("data:image/svg+xml,%3Csvg fill='gray' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;
+      background-position:right 10px center;
+    }
+
+    button{
+      width:100%;
+      padding:10px;
+      border:none;
+      border-radius:8px;
+      background:#3498db;
+      color:white;
+      cursor:pointer;
+      margin-top:10px;
+    }
+
+    button:hover{
+      background:#2980b9;
+    }
+
+    #indietroBtn{
+      background:#e74c3c;
+    }
+  </style>
 </head>
 
 <body style="display:none;">
+  <div class="card">
+    <h2>Aggiungi Paziente</h2>
 
-<div class="card">
-  <h2>Aggiungi Paziente</h2>
+    <input id="nome" placeholder="Nome paziente">
 
-  <input id="nome" placeholder="Nome paziente">
+    <!-- ✅ solo ospedali esistenti -->
+    <select id="ospedale">
+      <option value="">Seleziona ospedale</option>
+    </select>
 
-  <!-- ✅ solo ospedali esistenti -->
-  <select id="ospedale">
-    <option value="">Seleziona ospedale</option>
-  </select>
+    <input id="reparto" placeholder="Reparto">
+    <input id="stanza" placeholder="Stanza">
 
-  <input id="reparto" placeholder="Reparto">
-  <input id="stanza" placeholder="Stanza">
+    <button id="salvaBtn">Salva</button>
+    <button id="indietroBtn">Indietro</button>
+  </div>
 
-  <button id="salvaBtn">Salva</button>
-  <button id="indietroBtn">Indietro</button>
-</div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from
-  "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  getFirestore, collection, addDoc, getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    /* 🔐 Firebase */
+    const firebaseConfig = {
+      apiKey: "__FIREBASE_API_KEY__",
+      authDomain: "prenotazioni-cas.firebaseapp.com",
+      projectId: "prenotazioni-cas",
+    };
 
-/* 🔐 Firebase */
-const firebaseConfig = {
-  apiKey: "__FIREBASE_API_KEY__",
-  authDomain: "prenotazioni-cas.firebaseapp.com",
-  projectId: "prenotazioni-cas",
-};
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+    /* ✅ riferimenti DOM */
+    const nomeInput = document.getElementById("nome");
+    const ospedaleSelect = document.getElementById("ospedale");
+    const repartoInput = document.getElementById("reparto");
+    const stanzaInput = document.getElementById("stanza");
+    const salvaBtn = document.getElementById("salvaBtn");
+    const indietroBtn = document.getElementById("indietroBtn");
 
-/* ✅ riferimenti DOM (PRIMA di usarli!) */
-const nomeInput = document.getElementById("nome");
-const ospedaleSelect = document.getElementById("ospedale");
-const repartoInput = document.getElementById("reparto");
-const stanzaInput = document.getElementById("stanza");
-const salvaBtn = document.getElementById("salvaBtn");
-const indietroBtn = document.getElementById("indietroBtn");
+    /* 🔐 Mostra pagina solo se loggato */
+    onAuthStateChanged(auth, async (user) => {
+      if(!user){
+        window.location = "index.html";
+        return;
+      }
+      document.body.style.display = "flex";
+      await caricaOspedali();
+    });
 
-/* 🔐 Mostra pagina solo se loggato */
-onAuthStateChanged(auth, async (user)=>{
-  if(!user){
-    window.location = "index.html";
-    return;
-  }
-  document.body.style.display = "flex";
-  await caricaOspedali();
-});
+    /* 🏥 Carica ospedali esistenti */
+    async function caricaOspedali(){
+      ospedaleSelect.innerHTML =
+        '<option value="">Seleziona ospedale</option>';
 
-/* 🏥 Carica ospedali esistenti */
-async function caricaOspedali(){
-  ospedaleSelect.innerHTML = '<option value="">Seleziona ospedale</option>';
-  const snap = await getDocs(collection(db,"ospedali"));
-  snap.forEach(docSnap=>{
-    const o = docSnap.data();
-    ospedaleSelect.innerHTML += `
-      <option value="${o.nome}">
-        ${o.nome}${o.indirizzo ? " - " + o.indirizzo : ""}
-      </option>`;
-  });
-}
+      const snap = await getDocs(collection(db, "ospedali"));
 
-/* ✅ SALVA PAZIENTE */
-salvaBtn.addEventListener("click", async ()=>{
-  const nome = nomeInput.value.trim();
-  const ospedale = ospedaleSelect.value;
-  const reparto = repartoInput.value.trim();
-  const stanza = stanzaInput.value.trim();
+      snap.forEach(docSnap => {
+        const o = docSnap.data();
+        ospedaleSelect.innerHTML += `
+          <option value="${o.nome}">
+            ${o.nome}${o.indirizzo ? " - " + o.indirizzo : ""}
+          </option>`;
+      });
+    }
 
-  if(!nome || !ospedale || !reparto || !stanza){
-    alert("Compila tutti i campi!");
-    return;
-  }
+    /* ✅ SALVA PAZIENTE */
+    salvaBtn.addEventListener("click", async () => {
+      const nome = nomeInput.value.trim();
+      const ospedale = ospedaleSelect.value;
+      const reparto = repartoInput.value.trim();
+      const stanza = stanzaInput.value.trim();
 
-  await addDoc(collection(db,"pazienti"),{
-    nome,
-    ospedale,
-    reparto,
-    stanza
-  });
+      if(!nome || !ospedale || !reparto || !stanza){
+        alert("Compila tutti i campi!");
+        return;
+      }
 
-  alert("✅ Paziente aggiunto correttamente");
-  window.location = "dashboard.html";
-});
+      await addDoc(collection(db, "pazienti"), {
+        nome,
+        ospedale,
+        reparto,
+        stanza
+      });
 
-/* 🔙 INDIETRO */
-indietroBtn.addEventListener("click", ()=>{
-  window.location = "dashboard.html";
-});
-</script>
+      alert("✅ Paziente aggiunto correttamente");
+      window.location = "dashboard.html";
+    });
 
+    /* 🔙 INDIETRO */
+    indietroBtn.addEventListener("click", () => {
+      window.location = "dashboard.html";
+    });
+  </script>
 </body>
 </html>
-``
