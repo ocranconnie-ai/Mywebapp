@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,19 +9,16 @@
 <style>
 :root{
   --primary:#2196f3;
-  --secondary:#64b5f6;
   --danger:#e53935;
-  --bg:#f5f7fb;
 }
 
 body{
-  font-family: Arial, sans-serif;
-  background:var(--bg);
+  font-family: Arial;
+  background:#f5f7fb;
   margin:0;
-  display:none;
 }
 
-/* ✅ HEADER (UGUALE AD AGENDA) */
+/* ✅ HEADER CON LOGO */
 .header{
   background:var(--primary);
   color:white;
@@ -45,7 +43,8 @@ body{
   font-weight:bold;
 }
 
-.logout-btn{
+/* ✅ PULSANTE INDIETRO */
+.back-btn{
   background:var(--danger);
   border:none;
   color:white;
@@ -53,10 +52,6 @@ body{
   border-radius:6px;
   cursor:pointer;
   font-size:14px;
-}
-
-.logout-btn:hover{
-  background:#c62828;
 }
 
 /* ✅ CONTENUTO */
@@ -97,7 +92,7 @@ button{
 }
 
 #indietroBtn{
-  background:var(--danger);
+  background:#e74c3c;
   color:white;
 }
 
@@ -108,7 +103,7 @@ button{
 }
 
 .delete-btn{
-  background:var(--danger);
+  background:#e74c3c;
   color:white;
   margin-top:5px;
 }
@@ -120,7 +115,7 @@ button{
 </style>
 </head>
 
-<body>
+<body style="display:none;">
 
 <!-- ✅ HEADER -->
 <div class="header">
@@ -128,7 +123,7 @@ button{
     <img src="logo.png" alt="Logo">
     <span>Gestione Ospedali</span>
   </div>
-  <button id="logoutBtn" class="logout-btn">Logout</button>
+  <button class="back-btn" onclick="location='dashboard.html'">Indietro</button>
 </div>
 
 <div class="container">
@@ -147,8 +142,9 @@ button{
     <div id="listaOspedali"></div>
   </div>
 
-  <!-- 🔙 -->
+  <!-- 🔙 TORNA -->
   <button id="indietroBtn">Torna indietro</button>
+
 </div>
 
 <script type="module">
@@ -162,14 +158,15 @@ import {
   doc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 import {
   getAuth,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* 🔥 FIREBASE */
+// CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSyDZUTVFhbATsDmBP0VOr7fmfPByQGqwSIE",
+  apiKey: "__FIREBASE_API_KEY__",
   authDomain: "prenotazioni-cas.firebaseapp.com",
   projectId: "prenotazioni-cas",
 };
@@ -180,43 +177,49 @@ const auth = getAuth(app);
 
 const adminEmail = "admin@admin.com";
 
-/* 🔐 CONTROLLO ACCESSO */
-onAuthStateChanged(auth, (user) => {
+// 🔐 CONTROLLO ACCESSO
+onAuthStateChanged(auth, (user)=>{
+
   if(!user){
     window.location = "index.html";
     return;
   }
+
   if(user.email !== adminEmail){
     alert("Non autorizzato");
     window.location = "prenotazione.html";
     return;
   }
+
   document.body.style.display = "block";
   caricaOspedali();
 });
 
-/* ➕ AGGIUNGI OSPEDALE */
-salvaBtn.onclick = async () => {
-  const nome = nome.value.trim();
-  const indirizzo = indirizzo.value.trim();
+// ➕ AGGIUNGI OSPEDALE
+salvaBtn.onclick = async ()=>{
+
+  const nome = document.getElementById("nome").value.trim();
+  const indirizzo = document.getElementById("indirizzo").value.trim();
 
   if(!nome || !indirizzo){
     alert("Compila tutti i campi");
     return;
   }
 
-  await addDoc(collection(db,"ospedali"), { nome, indirizzo });
-  nome.value = "";
-  indirizzo.value = "";
+  await addDoc(collection(db,"ospedali"),{ nome, indirizzo });
+
+  document.getElementById("nome").value = "";
+  document.getElementById("indirizzo").value = "";
+
   caricaOspedali();
 };
 
-/* 📋 CARICA LISTA */
+// 📋 CARICA LISTA
 async function caricaOspedali(){
   const snapshot = await getDocs(collection(db,"ospedali"));
   listaOspedali.innerHTML = "";
 
-  snapshot.forEach(docSnap => {
+  snapshot.forEach(docSnap=>{
     const d = docSnap.data();
     const div = document.createElement("div");
     div.className = "item";
@@ -230,34 +233,29 @@ async function caricaOspedali(){
   });
 }
 
-/* ✏️ MODIFICA */
-window.modifica = async (id,nome,indirizzo) => {
+// ✏️ MODIFICA
+window.modifica = async function(id,nome,indirizzo){
   const nuovoNome = prompt("Nuovo nome", nome);
   const nuovoIndirizzo = prompt("Nuovo indirizzo", indirizzo);
   if(!nuovoNome || !nuovoIndirizzo) return;
 
-  await updateDoc(doc(db,"ospedali",id), {
+  await updateDoc(doc(db,"ospedali",id),{
     nome: nuovoNome,
     indirizzo: nuovoIndirizzo
   });
   caricaOspedali();
 };
 
-/* ❌ ELIMINA */
-window.elimina = async (id) => {
+// ❌ ELIMINA
+window.elimina = async function(id){
   if(!confirm("Eliminare ospedale?")) return;
   await deleteDoc(doc(db,"ospedali",id));
   caricaOspedali();
 };
 
-/* 🔙 TORNA */
-indietroBtn.onclick = () => {
+// 🔙 TORNA (pulsante sotto)
+indietroBtn.onclick = () =>{
   window.location = "prenotazione.html";
-};
-
-/* 🚪 LOGOUT */
-logoutBtn.onclick = () => {
-  auth.signOut().then(() => window.location = "index.html");
 };
 </script>
 
